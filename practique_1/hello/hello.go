@@ -3,6 +3,7 @@ package main
 import (
   "fmt"
   "example.com/greetings"
+  "log"  // este paquete muestra los paquetes por consola
 )
 
 /*
@@ -14,10 +15,21 @@ import (
 
   esta opcion ejecuta la escritura del archivo del go.mod del
   paquete hello.
+
 */
 
 func main() {
-  // obtiene el mensaje y lo imprime
-  message := greetings.Hello("Gabriel")
+
+  // se preparan los logs de la aplicacion para responder los errores
+  log.SetPrefix("greetings: ")
+  log.SetFlags(0)
+
+  // obtiene los valores de la funcion
+  message, error := greetings.Hello("Gabriel")
+
+  if error != nil {
+    log.Fatal(error)
+  }
+
   fmt.Println( message )
 }
