@@ -24,12 +24,25 @@ func main() {
   log.SetPrefix("greetings: ")
   log.SetFlags(0)
 
-  // obtiene los valores de la funcion
-  message, error := greetings.Hello("Gabriel")
+  /* 
+    obtiene los valores de la funcion
+    message, error := greetings.Hello("Gabriel")
+
+    if error != nil {
+      log.Fatal(error)
+    }
+
+    fmt.Println( message ) 
+  */
+
+  // array de nombres.
+  names := []string{ "Gladys", "Samantha", "Darrin" }
+
+  messages, error := greetings.Hellos( names )
 
   if error != nil {
-    log.Fatal(error)
+    log.Fatal( error )
   }
 
-  fmt.Println( message )
+  fmt.Println( messages )
 }
