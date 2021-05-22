@@ -21,8 +21,19 @@ import (
 func main() {
 
   // se preparan los logs de la aplicacion para responder los errores
+  
   log.SetPrefix("greetings: ")
   log.SetFlags(0)
+
+  names := []string{ "Gladys", "Samantha", "Darrin" }
+
+  messages, error := greetings.Hellos( names )
+
+  if error != nil {
+    log.Fatal( error )
+  }
+
+  fmt.Println( messages )
 
   /* 
     obtiene los valores de la funcion
@@ -35,14 +46,4 @@ func main() {
     fmt.Println( message ) 
   */
 
-  // array de nombres.
-  names := []string{ "Gladys", "Samantha", "Darrin" }
-
-  messages, error := greetings.Hellos( names )
-
-  if error != nil {
-    log.Fatal( error )
-  }
-
-  fmt.Println( messages )
 }
