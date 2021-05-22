@@ -10,9 +10,9 @@ type Page struct {
 }
 
 // se le integra la referencia del puntero actual a la funcion
-func ( p *Page ) save() error {
+func ( p *Page ) Save() error {
 
-	fileName := p.Title + ".txt"
+	fileName := "./content/" + p.Title + ".txt"
 
 	// el tercer parametro es la permisologia unix solo el
 	// que crea el archivo puede escribir y leer el archivo
@@ -23,8 +23,7 @@ func ( p *Page ) save() error {
 
 func LoadPage( title string ) ( *Page, error ) {
 
-	fileName := title + ".txt"
-
+	fileName := "./content/" + title + ".txt"
 	body, error := ioutil.ReadFile( fileName )
 
 	if error != nil {
