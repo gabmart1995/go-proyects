@@ -7,7 +7,7 @@ import (
   "example.com/read_file"
   "html/template"
   "regexp"
-  "errors"
+  // "errors"
 )
 
 func handlerExample( writer http.ResponseWriter, request *http.Request )  {
@@ -20,13 +20,7 @@ func handlerExample( writer http.ResponseWriter, request *http.Request )  {
   fmt.Fprintf( writer, "Hola mundo desde el server, me gustan los %s!", request.URL.Path[1:] )
 }
 
-func viewHandler( writer http.ResponseWriter, request *http.Request )  {
-
-  title, errorTitle := getTitle( writer, request )
-  
-  if errorTitle != nil {
-    return 
-  }
+func viewHandler( writer http.ResponseWriter, request *http.Request, title string )  {
 
   page, error := read_file.LoadPage( title )
 
@@ -40,16 +34,10 @@ func viewHandler( writer http.ResponseWriter, request *http.Request )  {
   renderTemplate( writer, "view", page )
 }
 
-func editHandler( writer http.ResponseWriter, request *http.Request )  {
+func editHandler( writer http.ResponseWriter, request *http.Request, title string )  {
 
   // title := request.URL.Path[ len("/edit/"): ] before
   
-  title, errorTitle := getTitle( writer, request )
-
-  if errorTitle != nil {
-    return 
-  }
-
   page, error := read_file.LoadPage( title )
 
   if error != nil {
@@ -59,13 +47,7 @@ func editHandler( writer http.ResponseWriter, request *http.Request )  {
   renderTemplate( writer, "edit", page )
 }
 
-func saveHandler( writer http.ResponseWriter, request *http.Request ) {
-
-  title, errorTitle := getTitle( writer, request )
-
-  if errorTitle != nil {
-    return 
-  }
+func saveHandler( writer http.ResponseWriter, request *http.Request, title string ) {
 
   body := request.FormValue("body")
 
@@ -89,8 +71,6 @@ func renderTemplate( writer http.ResponseWriter, templ string, page *read_file.P
 
   error := templates.ExecuteTemplate( writer, templ + ".html", page )
 
-  fmt.Println( error )
-
   if error != nil {
 
     http.Error( writer, error.Error(), http.StatusInternalServerError )
@@ -98,20 +78,25 @@ func renderTemplate( writer http.ResponseWriter, templ string, page *read_file.P
 
 }
 
-func getTitle( writer http.ResponseWriter, request *http.Request ) ( string, error ) {
 
-  match := validPath.FindStringSubmatch( request.URL.Path )
+// closures metodo poderoso para capturar los errores antes de ejecutar el codigo
+// HandlerFunc es el tipo de no confundir con HandleFunc que es la funcion
 
-  if match == nil {
+func makeHandler( callback func( http.ResponseWriter, *http.Request, string )) ( http.HandlerFunc ) {
+  
+  return func( writer http.ResponseWriter, request *http.Request ) {
     
-    http.NotFound( writer, request )
+    match := validPath.FindStringSubmatch( request.URL.Path )
 
-    return "", errors.New("Titulo de página inválida")
+    if match == nil {
+    
+      http.NotFound( writer, request )
+
+      return
+    }
+
+    callback( writer, request, match[2] )
   }
-
-  // fmt.Println( match )
-
-  return match[2], nil
 }
 
 // ====================================================================
@@ -119,9 +104,9 @@ func getTitle( writer http.ResponseWriter, request *http.Request ) ( string, err
 // ====================================================================
 func main()  {
 
-  http.HandleFunc( "/view/", viewHandler )
-  http.HandleFunc( "/edit/", editHandler )
-  http.HandleFunc( "/save/", saveHandler )
+  http.HandleFunc( "/view/", makeHandler( viewHandler ) )
+  http.HandleFunc( "/edit/", makeHandler( editHandler ) )
+  http.HandleFunc( "/save/", makeHandler( saveHandler ) )
 
   fmt.Println("Servidor escuchando en el puerto 8080")
 
@@ -135,7 +120,7 @@ func main()  {
 
 // variables globales crea una insancia de templates cacheadas en el servidor retorna un *Template
 
-var templates = template.Must( template.ParseFiles( "./templates/edit.html", "./templates/view.html" ) )
+var templates = template.Must( template.ParseFiles( "./temp/edit.html", "./temp/view.html" ) )
 
 // validacion de url
 
