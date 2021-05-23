@@ -1,1 +1,1 @@
-guau que brutal
+Pagina de ejemplo en go
