@@ -39,7 +39,7 @@ var tasks = allTasks {
 }
 
 func indexRoute( writer http.ResponseWriter, request *http.Request ) {
-	
+
 	fmt.Fprintf( writer, "Bienvendo al API" )
 }
 
@@ -48,7 +48,7 @@ func getTasks( writer http.ResponseWriter, request *http.Request ) {
 	// se colocan los datos de la cabecera
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader( 200 ) // status
-	
+
 	json.NewEncoder( writer ).Encode( tasks )
 }
 
@@ -59,9 +59,9 @@ func getTask( writer http.ResponseWriter, request *http.Request ) {
 	tasksId, error := strconv.Atoi( vars["id"] )
 
 	if error != nil {
-		
+
 		http.Error( writer, "Ingrese un id valido", 400 )
-		
+
 		return
 	}
 
@@ -71,7 +71,7 @@ func getTask( writer http.ResponseWriter, request *http.Request ) {
 
 			writer.Header().Set("Content-Type", "application/json")
 			writer.WriteHeader( 200 ) // status
-			
+
 			json.NewEncoder( writer ).Encode( task )
 
 			return
@@ -89,9 +89,9 @@ func deleteTask( writer http.ResponseWriter, request *http.Request ) {
 	tasksId, error := strconv.Atoi( vars["id"] )
 
 	if error != nil {
-		
+
 		http.Error( writer, "Ingrese un id valido", 400 )
-		
+
 		return
 	}
 
@@ -104,7 +104,7 @@ func deleteTask( writer http.ResponseWriter, request *http.Request ) {
 
 			// writer.Header().Set("Content-Type", "application/json")
 			writer.WriteHeader( 200 ) // status
-			
+
 			fmt.Fprintf( writer, "La tarea con el id %v ha sido removido con éxito", tasksId )
 
 			return
@@ -129,10 +129,16 @@ func createTasks( writer http.ResponseWriter, request *http.Request ) {
 
 	json.Unmarshal( requestBody, &newTask )
 
-	newTask.Id = len( tasks ) + 1 
+
+
+	newTask.Id = len( tasks ) + 1
 
 	// inserta el nuevo elemento en el array
 	tasks = append( tasks, newTask )
+
+	fmt.Println( tasks )
+
+	fmt.Println( newTask )
 
 	writer.Header().Set("Content-Type", "application/json")
 	writer.WriteHeader( 201 )
@@ -152,9 +158,9 @@ func updateTask( writer http.ResponseWriter, request *http.Request ) {
 	tasksId, error := strconv.Atoi( vars["id"] )
 
 	if error != nil {
-		
+
 		http.Error( writer, "Ingrese un id valido", 400 )
-		
+
 		return
 	}
 
@@ -162,10 +168,10 @@ func updateTask( writer http.ResponseWriter, request *http.Request ) {
 	requestBody, error := ioutil.ReadAll( request.Body )
 
 	if error != nil {
-		
+
 		http.Error( writer, "Inserte datos validos", 400 )
 
-		return 
+		return
 	}
 
 	json.Unmarshal( requestBody, &updatedTask )
@@ -183,7 +189,7 @@ func updateTask( writer http.ResponseWriter, request *http.Request ) {
 			tasks = append( tasks, updatedTask )
 
 			writer.WriteHeader( 200 ) // status
-			
+
 			fmt.Fprintf( writer, "La tarea con el id %v ha sido actualizado con éxito", tasksId )
 
 			return

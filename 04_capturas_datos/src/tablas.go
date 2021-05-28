@@ -3,7 +3,7 @@ package main
 import (
   "fmt"
   "os"
-  // "regexp"
+  "io/ioutil"
   "strings"
   "strconv"
   "log"
@@ -15,7 +15,7 @@ type Options struct {
   Value int
 }
 
-type allOptions []Options
+type allOptions []*Options
 
 // array de opciones
 var options = allOptions {}
@@ -24,14 +24,100 @@ func showHelp() {
 
   fmt.Println(`
     Bienvendo al generador de tablas de multiplicar realizado con go.
-    Para generar una tablas puedes inclur las siguientes opciones:
+    Para generar una tabla debes inclur las siguientes opciones:
 
     --table=value | -t=value:  Genera una tabla con el valor proporcionado por
         el parametro (value)
 
-    --limite=value | -l=value: Ejecuta la tabla con limite colocado (value), sino se
-        coloca el valor es 10
+    --limite=value | -l=value: (opcional) Ejecuta la tabla con limite colocado (value), sino se
+        coloca el valor por defecto es 10
   `)
+}
+
+func storeOption( arg string ) ( []*Options )  {
+
+  value, error := strconv.Atoi( strings.Split( arg, "=" )[1] )
+
+  if ( error != nil ) {
+    log.SetPrefix( strings.Split( arg, "=")[0] + ": " )
+    log.Fatal( errors.New( "El Valor colocado es invalido" ) )
+  }
+
+  // insert element in array
+  return append( options, &Options{ Name: strings.Split( arg, "=")[0], Value: value } )
+}
+
+func checkOption() {
+
+  if ( len( options ) > 2 ) {
+    log.SetPrefix( "Arg: " )
+    log.Fatal( errors.New( "Demasiados argumentos inicializados" ) )
+  }
+
+  table := false
+  limit := false
+
+  for _, option := range options {
+
+    switch option.Name {
+
+      case "--table":
+        table = true
+        break
+
+      case "-t":
+        table = true
+        break
+
+      case "--limit":
+        limit = true
+        break
+
+      case "-l":
+        limit = true
+        break
+
+      default:
+        break
+    }
+  }
+
+  if table == true && limit == true {
+    saveTableLimit()
+
+  } else if table == true && limit == false {
+    saveTable()
+
+  } else if table == false && limit == true  {
+    log.SetPrefix( "Tabla: " )
+    log.Fatal( errors.New( "Ingresa la opcion tabla, campo obligatiorio" ) )
+
+  } else if table == false && limit {
+    log.SetPrefix( "Opcion: " )
+    log.Fatal( errors.New( "La opcion o opciones colocadas es invalido" ) )
+
+  }
+
+}
+
+func saveTable() {
+
+  value := options[0].Value
+  var operation string
+
+  for index := 1;  index <= 10; index++ {
+    operation += strconv.Itoa( value ) + " * " + strconv.Itoa( index ) + " = " + strconv.Itoa( (index * value) ) + "\n"
+  }
+
+  error := ioutil.WriteFile( "tabla_" + strconv.Itoa( value ) + ".txt", []byte( operation ), 0600 )
+
+  if error != nil {
+    log.Fatal( error )
+  }
+}
+
+func saveTableLimit() {
+
 }
 
 func main()  {
@@ -57,20 +143,8 @@ func main()  {
       return
     }
 
-    value, error := strconv.Atoi( strings.Split( arg, "=")[1] )
-
-    if ( error != nil ) {
-      log.SetPrefix( strings.Split( arg, "=")[0] + ": " )
-      log.Fatal( errors.New( "El Valor colocado es invalido" ) )
-    }
-
-    newOption := &Options{ Name: strings.Split( arg, "=")[0], Value: value }
-
-    // insert element
-    // options = append( options, newOption )
-
-    fmt.Println( options )
-    fmt.Println( newOption )
-
+    options = storeOption( arg )
   }
+
+  checkOption()
 }
