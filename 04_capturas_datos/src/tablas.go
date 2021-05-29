@@ -102,11 +102,12 @@ func checkOption() {
 
 func saveTable() {
 
-  value := options[0].Value
+  value := options[ len( options ) - 1 ].Value
   var operation string
 
   for index := 1;  index <= 10; index++ {
-    operation += strconv.Itoa( value ) + " * " + strconv.Itoa( index ) + " = " + strconv.Itoa( (index * value) ) + "\n"
+    operation += strconv.Itoa( value ) + " * " + strconv.Itoa( index ) +
+      " = " + strconv.Itoa( (index * value) ) + "\n"
   }
 
   error := ioutil.WriteFile( "tabla_" + strconv.Itoa( value ) + ".txt", []byte( operation ), 0600 )
@@ -114,10 +115,39 @@ func saveTable() {
   if error != nil {
     log.Fatal( error )
   }
+
+  fmt.Printf( "La tabla del %d fue generada con exito\n", value )
 }
 
 func saveTableLimit() {
 
+  var valueTable int
+  var valueLimit int
+  var operation string
+
+  for _, option := range options {
+
+    if ( option.Name == "-t" || option.Name == "--table" ) {
+      valueTable = option.Value
+
+    } else {
+      valueLimit = option.Value
+
+    }
+  }
+
+  for index := 1;  index <= valueLimit; index++ {
+    operation += strconv.Itoa( valueTable ) + " * " + strconv.Itoa( index ) +
+      " = " + strconv.Itoa( (index * valueTable) ) + "\n"
+  }
+
+  error := ioutil.WriteFile( "tabla_" + strconv.Itoa( valueTable ) + ".txt", []byte( operation ), 0600 )
+
+  if error != nil {
+    log.Fatal( error )
+  }
+
+  fmt.Printf( "La tabla del %d fue generada con exito\n", valueTable )
 }
 
 func main()  {
