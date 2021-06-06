@@ -29,7 +29,7 @@ func showHelp() {
     --table=value | -t=value:  Genera una tabla con el valor proporcionado por
         el parametro (value)
 
-    --limite=value | -l=value: (opcional) Ejecuta la tabla con limite colocado (value), sino se
+    --limit=value | -l=value: (opcional) Ejecuta la tabla con limite colocado (value), sino se
         coloca el valor por defecto es 10
   `)
 }
@@ -83,16 +83,20 @@ func checkOption() {
   }
 
   if table == true && limit == true {
+
     saveTableLimit()
 
   } else if table == true && limit == false {
+
     saveTable()
 
   } else if table == false && limit == true  {
+
     log.SetPrefix( "Tabla: " )
     log.Fatal( errors.New( "Ingresa la opcion tabla, campo obligatiorio" ) )
 
   } else if table == false && limit {
+
     log.SetPrefix( "Opcion: " )
     log.Fatal( errors.New( "La opcion o opciones colocadas es invalido" ) )
 
@@ -102,10 +106,11 @@ func checkOption() {
 
 func saveTable() {
 
-  value := options[ len( options ) - 1 ].Value
   var operation string
+  value := options[ len( options ) - 1 ].Value
 
   for index := 1;  index <= 10; index++ {
+
     operation += strconv.Itoa( value ) + " * " + strconv.Itoa( index ) +
       " = " + strconv.Itoa( (index * value) ) + "\n"
   }
@@ -113,6 +118,7 @@ func saveTable() {
   error := ioutil.WriteFile( "tabla_" + strconv.Itoa( value ) + ".txt", []byte( operation ), 0600 )
 
   if error != nil {
+
     log.Fatal( error )
   }
 
@@ -127,28 +133,33 @@ func saveTableLimit() {
 
   for _, option := range options {
 
-    if ( option.Name == "-t" || option.Name == "--table" ) {
+    if option.Name == "-t" || option.Name == "--table" {
+      
       valueTable = option.Value
 
     } else {
+      
       valueLimit = option.Value
-
     }
   }
 
   for index := 1;  index <= valueLimit; index++ {
+    
     operation += strconv.Itoa( valueTable ) + " * " + strconv.Itoa( index ) +
-      " = " + strconv.Itoa( (index * valueTable) ) + "\n"
+      " = " + strconv.Itoa( ( index * valueTable ) ) + "\n"
   }
 
   error := ioutil.WriteFile( "tabla_" + strconv.Itoa( valueTable ) + ".txt", []byte( operation ), 0600 )
 
   if error != nil {
+
     log.Fatal( error )
   }
 
   fmt.Printf( "La tabla del %d fue generada con exito\n", valueTable )
 }
+
+// ======================================================================================
 
 func main()  {
 
@@ -159,6 +170,7 @@ func main()  {
   args := os.Args
 
   if ( len( args ) == 1 ) {
+    
     showHelp()
     return
   }
@@ -169,6 +181,7 @@ func main()  {
   for _, arg := range args {
 
     if ( arg == "--help" || arg == "-h" ) {
+      
       showHelp()
       return
     }
