@@ -21,7 +21,7 @@ type Admin struct {
 
 func ( this Admin ) Permissions() int {
 	return 5
-} 
+}
 
 func ( this Admin ) Name() string {
 	return this.name
@@ -40,13 +40,11 @@ type Editor struct {
 
 func ( this Editor ) Permissions() int {
 	return 3
-} 
+}
 
 func ( this Editor ) Name() string {
 	return this.name
 }
-
-
 
 func auth( user User ) string {
 
@@ -54,15 +52,14 @@ func auth( user User ) string {
 
 	if permission > 4 {
 		return user.Name() + " tiene permisos de administrador"
-	
+
 	} else if permission == 3 {
 		return user.Name() + " tiene permisos de editor"
-	
+
 	} else {
 		return "no posee acceso"
-	
-	}
 
+	}
 }
 
 // =================
