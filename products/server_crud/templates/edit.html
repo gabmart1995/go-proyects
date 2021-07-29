@@ -7,10 +7,10 @@
 	</div>
 	<div class="card-body">
 		<form action="/update" method="POST">
-      <!-- Id employee -->
-      <input class="form-control" id="id" hidden type="text" name="id" value="{{ .Id }}" />
+			<!-- Id employee -->
+			<input class="form-control" id="id" hidden type="text" name="id" value="{{ .Id }}" />
 
-      <div class="form-group mb-2">
+			<div class="form-group mb-2">
 				<label for="nombre" class="form-label">Nombre:</label>
 				<input type="text" id="nombre" value="{{ .Name }}" placeholder="nombre ..." class="form-control" name="nombre" />
 			</div>
