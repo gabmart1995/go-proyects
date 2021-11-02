@@ -6,5 +6,7 @@ import (
 )
 
 func main() {
-	fmt.Println("values: " + *config.GetUrl())
+	fmt.Println( "url to scrapping: " + config.GetUrl() )
+	fmt.Println( "element: " + config.GetElement() )
+	fmt.Println("scrapping ...")
 }
