@@ -10,17 +10,22 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// tipos
+// types
 type Task struct {
 	Id      int    `json:"id"`
 	Name    string `json:"name"`
 	Content string `json:"content"`
 }
+
 type allTasks []Task
 
-type filterTask func(tasks []Task, callback func(task Task, index int, slice []Task) bool) []Task
-type mapTask func(tasks []Task, callback func(task Task, index int, slice []Task) Task) []Task
-type findIndexTask func(tasks []Task, callback func(task Task, index int, slice []Task) bool) int
+type filterCallback func(task Task, index int, slice []Task) bool
+type filterTask func(tasks []Task, callback filterCallback) []Task
+
+type mapCallback func(task Task, index int, slice []Task) Task
+type mapTask func(tasks []Task, callback mapCallback) []Task
+
+type findIndexTask func(tasks []Task, callback filterCallback) int
 
 var tasks = allTasks{
 	{
@@ -37,7 +42,7 @@ var findIndex findIndexTask
 func init() {
 
 	// pollyfills slice fillter.js
-	filter = func(tasks []Task, callback func(task Task, index int, slice []Task) bool) []Task {
+	filter = func(tasks []Task, callback filterCallback) []Task {
 
 		var result []Task
 
@@ -56,7 +61,7 @@ func init() {
 	}
 
 	/** pollyfills slice map.js */
-	maps = func(tasks []Task, callback func(task Task, index int, slice []Task) Task) []Task {
+	maps = func(tasks []Task, callback mapCallback) []Task {
 
 		var result []Task
 
@@ -79,7 +84,7 @@ func init() {
 	}
 
 	/** pollyfills slice .js */
-	findIndex = func(tasks []Task, callback func(task Task, index int, slice []Task) bool) int {
+	findIndex = func(tasks []Task, callback filterCallback) int {
 
 		for index, task := range tasks {
 
