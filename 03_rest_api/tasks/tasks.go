@@ -27,6 +27,7 @@ type mapTask func(tasks []Task, callback mapCallback) []Task
 
 type findIndexTask func(tasks []Task, callback filterCallback) int
 
+/* lista de tareas */
 var tasks = allTasks{
 	{
 		Id:      1,
@@ -34,14 +35,19 @@ var tasks = allTasks{
 		Content: "Some content",
 	},
 }
+
+/* pollyfill de slice filter Javascript */
 var filter filterTask
+
+/* pollyfill de slice map Javascript */
 var maps mapTask
+
+/* pollyfill de slice find index Javascript */
 var findIndex findIndexTask
 
 // inicializamos la libreria
 func init() {
 
-	// pollyfills slice fillter.js
 	filter = func(tasks []Task, callback filterCallback) []Task {
 
 		var result []Task
@@ -60,7 +66,6 @@ func init() {
 		return result
 	}
 
-	/** pollyfills slice map.js */
 	maps = func(tasks []Task, callback mapCallback) []Task {
 
 		var result []Task
@@ -93,7 +98,7 @@ func init() {
 			}
 		}
 
-		// devolvemos -1 sino existe ninguna coicidencia
+		// devolvemos -1 sino existe ninguna coincidencia
 		return -1
 	}
 }
