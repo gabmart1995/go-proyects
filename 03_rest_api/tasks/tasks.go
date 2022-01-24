@@ -88,7 +88,6 @@ func init() {
 		*/
 	}
 
-	/** pollyfills slice .js */
 	findIndex = func(tasks []Task, callback filterCallback) int {
 
 		for index, task := range tasks {
