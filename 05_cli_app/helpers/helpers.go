@@ -13,6 +13,9 @@ import (
 
 func CreateTodo(description string) {
 
+	// currentTime := time.Now()
+	// currentTime.Format("2006-01-02 15:04:05")
+
 	idTodo := uuid.NewString()
 	todos := models.ListTodos
 
@@ -47,12 +50,71 @@ func GetInput(message string) string {
 
 func GetTodos() []models.Todo {
 
-	// tranforma el objeto a slice
-	var values []models.Todo
+	// lee nuevamente los valores en el JSON
+	models.ListTodos.GetJSON()
 
-	for _, value := range models.ListTodos.Listado {
-		values = append(values, value)
+	// tranforma el objeto a slice
+	var listTodos []models.Todo
+
+	for _, todo := range models.ListTodos.Listado {
+		listTodos = append(listTodos, todo)
 	}
 
-	return values
+	return listTodos
+}
+
+func GetTodosCompleted() []models.Todo {
+
+	// lee nuevamente los valores en el JSON
+	models.ListTodos.GetJSON()
+
+	// tranforma el objeto a slice
+	var listTodos []models.Todo
+
+	for _, todo := range models.ListTodos.Listado {
+
+		if len(todo.CompletedIn) > 0 {
+			listTodos = append(listTodos, todo)
+		}
+	}
+
+	return listTodos
+}
+
+func GetTodosPendient() []models.Todo {
+
+	// lee nuevamente los valores en el JSON
+	models.ListTodos.GetJSON()
+
+	// tranforma el objeto a slice
+	var listTodos []models.Todo
+
+	for _, todo := range models.ListTodos.Listado {
+
+		if len(todo.CompletedIn) == 0 {
+			listTodos = append(listTodos, todo)
+		}
+	}
+
+	return listTodos
+}
+
+func DeleteTodo(id string) {
+
+	// se extrae la propiedad del diccionario
+	// el ok indica si la propiedad existe en el diccionario
+	_, ok := models.ListTodos.Listado[id]
+
+	if ok {
+
+		delete(models.ListTodos.Listado, id)
+
+		models.ListTodos.SaveJSON(models.ListTodos)
+
+		fmt.Println("Tarea borrada con éxito")
+
+		return
+	}
+
+	fmt.Println("No se encontro id de la tarea")
 }

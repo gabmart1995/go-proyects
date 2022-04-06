@@ -3,6 +3,7 @@ package models
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 )
 
@@ -40,7 +41,7 @@ func (todos *Todos) SaveJSON(newList Todos) {
 	// os: WRONLY: sobreescribe todo el archivo
 	// os: APPEND: coloca en la ultima posicion el contenido
 
-	file, err := os.OpenFile("todo.json", os.O_WRONLY|os.O_CREATE, 0644)
+	file, err := os.OpenFile("todo.json", (os.O_WRONLY | os.O_CREATE | os.O_TRUNC), 0644)
 
 	if err != nil {
 		panic(err)
@@ -48,6 +49,7 @@ func (todos *Todos) SaveJSON(newList Todos) {
 
 	defer file.Close()
 
+	// transforma la data en JSON
 	data, err := json.Marshal(&todos)
 
 	if err != nil {
@@ -60,7 +62,7 @@ func (todos *Todos) SaveJSON(newList Todos) {
 		panic(err)
 	}
 
-	ListTodos = newList
+	fmt.Println("Tarea creada con éxito")
 }
 
 func (todos *Todos) GetJSON() {
