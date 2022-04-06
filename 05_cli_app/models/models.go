@@ -3,7 +3,6 @@ package models
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"os"
 )
 
@@ -21,11 +20,12 @@ var ListTodos = Todos{
 	Listado: make(map[string]Todo),
 }
 
-// constructor
+// constructor del modulo
 func init() {
 
-	// verifica si existe el JSON
+	// verifica si existe el JSON crea la estructura
 	if _, err := os.Stat("todo.json"); errors.Is(err, os.ErrNotExist) {
+		ListTodos.SaveJSON(ListTodos)
 		return
 	}
 
@@ -61,8 +61,6 @@ func (todos *Todos) SaveJSON(newList Todos) {
 	if _, err := file.Write(data); err != nil {
 		panic(err)
 	}
-
-	fmt.Println("Tarea creada con éxito")
 }
 
 func (todos *Todos) GetJSON() {

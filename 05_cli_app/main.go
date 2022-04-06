@@ -61,12 +61,16 @@ func formatTodo(todos []models.Todo, subTitle string) {
 
 	fmt.Print(title)
 
+	if len(todos) == 0 {
+		fmt.Println(ColorRed + "\nNo existen registros de tareas" + ColorReset)
+	}
+
 	for index, todo := range todos {
 
 		var todoFormat string
 
 		if len(todo.CompletedIn) > 0 {
-			todoFormat = ColorGreen + "Completada"
+			todoFormat = ColorGreen + todo.CompletedIn
 
 		} else {
 			todoFormat = ColorRed + "Pendiente"
@@ -83,6 +87,52 @@ func formatTodo(todos []models.Todo, subTitle string) {
 	}
 }
 
+func updateOrDeleteTodo(todos []models.Todo, delete bool, message string) error {
+
+	find := func(todos []models.Todo, index int) (models.Todo, error) {
+
+		for idx, todo := range todos {
+			if idx == index {
+				return todo, nil
+			}
+		}
+
+		return models.Todo{}, errors.New("no se encontro el elemento")
+	}
+
+	input := helpers.GetInput(message)
+	index, err := strconv.Atoi(input)
+
+	if err != nil {
+		return errors.New("el valor ingresado debe ser un número")
+	}
+
+	if index != -1 {
+
+		todo, errFind := find(todos, (index - 1))
+
+		// en caso de no encontrar el valor en el array
+		if errFind != nil {
+			return errFind
+		}
+
+		// flag delete
+		if delete {
+
+			helpers.DeleteTodo(todo.Id)
+			fmt.Println("Tarea borrada con éxito")
+
+		} else {
+
+			// actualizamos la tarea
+			helpers.UpdateTodo(todo)
+			fmt.Println("Tarea actualizada con éxito")
+		}
+	}
+
+	return nil
+}
+
 func main() {
 
 	var option int
@@ -96,8 +146,11 @@ func main() {
 
 		switch option {
 		case 1:
-			input := helpers.GetInput("Ingrese la descripción de la tarea:")
-			helpers.CreateTodo(input)
+			input := helpers.GetInput("Ingrese la descripción de la tarea o -1 para cancelar:")
+
+			if input != "-1" {
+				helpers.CreateTodo(input)
+			}
 
 			break
 
@@ -123,47 +176,44 @@ func main() {
 			formatTodo(todos, "pendientes")
 			break
 
+		// completar tareas
 		case 5:
-			fmt.Printf("option 5")
+
+			todos := helpers.GetTodos()
+
+			clearConsole()
+
+			formatTodo(todos, "para completar")
+
+			err := updateOrDeleteTodo(
+				todos,
+				false,
+				"\nIngrese el numero de la tarea para completarla o -1 para cancelar:",
+			)
+
+			if err != nil {
+				fmt.Println(err.Error())
+			}
+
 			break
 
 		// borrar tarea
 		case 6:
 
-			find := func(todos []models.Todo, index int) (models.Todo, error) {
-
-				for idx, todo := range todos {
-					if idx == index {
-						return todo, nil
-					}
-				}
-
-				return models.Todo{}, errors.New("no se encontro el elemento")
-			}
-
 			todos := helpers.GetTodos()
 
 			clearConsole()
+
 			formatTodo(todos, "para borrar")
 
-			input := helpers.GetInput("\nIngrese el numero de la tarea para borrarla:")
-			index, err := strconv.Atoi(input)
+			err := updateOrDeleteTodo(
+				todos,
+				true,
+				"\nIngrese el numero de la tarea para borrarla o -1 para cancelar:",
+			)
 
 			if err != nil {
-				fmt.Println("El valor ingresado debe ser un número")
-
-			} else {
-
-				todo, errFind := find(todos, (index - 1))
-
-				// en caso de no encontrar el valor en el array
-				if errFind != nil {
-					fmt.Println("El indice seleccionado no es correcto")
-
-				} else {
-					// borramos el elemento
-					helpers.DeleteTodo(todo.Id)
-				}
+				fmt.Println(err.Error())
 			}
 
 			break

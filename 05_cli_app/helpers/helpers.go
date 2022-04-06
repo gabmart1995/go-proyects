@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -25,6 +26,27 @@ func CreateTodo(description string) {
 		Description: description,
 		CompletedIn: "",
 	}
+
+	// salvamos los datos en el json
+	todos.SaveJSON(todos)
+
+	fmt.Println("Tarea creada con éxito")
+}
+
+func UpdateTodo(todo models.Todo) {
+
+	currentTime := time.Now()
+	todos := models.ListTodos
+
+	if len(todo.CompletedIn) == 0 {
+		todo.CompletedIn = currentTime.Format("2006-01-02 15:04:05")
+
+	} else {
+		todo.CompletedIn = ""
+
+	}
+
+	todos.Listado[todo.Id] = todo
 
 	// salvamos los datos en el json
 	todos.SaveJSON(todos)
@@ -110,8 +132,6 @@ func DeleteTodo(id string) {
 		delete(models.ListTodos.Listado, id)
 
 		models.ListTodos.SaveJSON(models.ListTodos)
-
-		fmt.Println("Tarea borrada con éxito")
 
 		return
 	}
