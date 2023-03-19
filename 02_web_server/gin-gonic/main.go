@@ -4,7 +4,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
 
@@ -19,19 +18,14 @@ func main() {
 	// get env variable PORT
 	PORT := os.Getenv("PORT")
 
-	// gin server
-	router := gin.Default()
+	// render app
+	server := getApp()
 
-	// load html
-	router.LoadHTMLGlob("./public/templates/**/*.html")
+	// render a angular app
+	// server := getAppAngular()
 
-	// load static simple
-	router.Static("/assets", "public/static") // css and js
-	router.Static("/images", "public/images") // images
-
-	// router.StaticFS("/static", http.Dir("./public/static")) FS
-
-	server := getApp(router)
+	// render a react app
+	// server := getAppReact()
 
 	log.Fatal(server.Run(":" + PORT))
 }
