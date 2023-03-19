@@ -11,6 +11,10 @@ func getApp() *gin.Engine {
 
 	// gin server
 	router := gin.Default()
+	response := gin.H{
+		"name":  "Gabriel Martinez",
+		"title": "Curso de GO",
+	}
 
 	// load html
 	router.LoadHTMLGlob("./public/templates/**/*.html")
@@ -20,24 +24,15 @@ func getApp() *gin.Engine {
 	router.Static("/images", "public/images") // images
 
 	router.GET("/", func(ctx *gin.Context) {
-		ctx.HTML(http.StatusOK, "index.html", gin.H{
-			"name":  "Gabriel Martinez",
-			"title": "Curso de GO",
-		})
+		ctx.HTML(http.StatusOK, "index.html", response)
 	})
 
 	router.GET("/generic", func(ctx *gin.Context) {
-		ctx.HTML(http.StatusOK, "generic.html", gin.H{
-			"name":  "Gabriel Martinez",
-			"title": "Curso de GO",
-		})
+		ctx.HTML(http.StatusOK, "generic.html", response)
 	})
 
 	router.GET("/elements", func(ctx *gin.Context) {
-		ctx.HTML(http.StatusOK, "elements.html", gin.H{
-			"name":  "Gabriel Martinez",
-			"title": "Curso de GO",
-		})
+		ctx.HTML(http.StatusOK, "elements.html", response)
 	})
 
 	/* 404 handler */
