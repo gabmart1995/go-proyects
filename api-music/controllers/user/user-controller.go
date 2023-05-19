@@ -263,7 +263,6 @@ func Login(c *fiber.Ctx, db *gorm.DB) error {
 		[]byte(userDB.Password),
 		[]byte(user.Password),
 	); err != nil {
-
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
 			"ok":      false,
 			"message": "Invalid credentials",
