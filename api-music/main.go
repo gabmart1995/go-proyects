@@ -41,13 +41,15 @@ func main() {
 	app := fiber.New()
 
 	// middlewares
-	app.Use(middlewares.CORSMiddleware)
+	app.Use(middlewares.CORS)
 
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("hello world")
 	})
 
 	api := app.Group("/api")
+
+	api.Post("/login", makeHandler(user.Login, db))
 
 	api.Get("/user", makeHandler(user.GetAll, db))
 	api.Get("/user/:id", makeHandler(user.Get, db))

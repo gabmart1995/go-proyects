@@ -2,12 +2,14 @@ package user
 
 import (
 	"api-music/helpers"
+	"api-music/middlewares"
 	"api-music/models"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -210,5 +212,89 @@ func Delete(c *fiber.Ctx, db *gorm.DB) error {
 		"status":  http.StatusOK,
 		"data":    nil,
 		"message": "User delete successfully",
+	})
+}
+
+func Login(c *fiber.Ctx, db *gorm.DB) error {
+
+	var (
+		user   models.User
+		userDB models.User
+	)
+
+	// obtenemos los datos
+	if err := c.BodyParser(&user); err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"ok":      false,
+			"status":  http.StatusInternalServerError,
+			"data":    nil,
+			"message": "Error in parsing JSON",
+		})
+	}
+
+	// validamos los datos
+	if errors := user.ValidateStructLogin(); errors != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"ok":      false,
+			"status":  http.StatusBadRequest,
+			"message": "Error in entries fields",
+			"data":    errors,
+		})
+	}
+
+	// verificamos si el usuario existe
+	result := db.Where(&models.User{Email: user.Email, IsActive: true}).Find(&userDB)
+
+	if result.RowsAffected == 0 {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"ok":      false,
+			"message": "Invalid credentials",
+			"status":  http.StatusBadRequest,
+			"data":    nil,
+		})
+	}
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	// comparamos la contraseñas
+	if err := bcrypt.CompareHashAndPassword(
+		[]byte(userDB.Password),
+		[]byte(user.Password),
+	); err != nil {
+
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{
+			"ok":      false,
+			"message": "Invalid credentials",
+			"status":  http.StatusBadRequest,
+			"data":    nil,
+		})
+	}
+
+	// generamos y firmamos el token JWT
+	token, err := middlewares.GenerateJWT(userDB.Name + " " + userDB.Surname)
+
+	if err != nil {
+		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Problemas internos del servidor",
+			"status":  http.StatusInternalServerError,
+			"ok":      false,
+			"data":    nil,
+		})
+	}
+
+	// limpiamos la contraseña
+	userDB.Password = ""
+
+	// retornamos los datos al usuario
+	return c.Status(http.StatusOK).JSON(fiber.Map{
+		"ok":      true,
+		"status":  http.StatusOK,
+		"message": nil,
+		"data": fiber.Map{
+			"user":  userDB,
+			"token": token, // token jwt
+		},
 	})
 }

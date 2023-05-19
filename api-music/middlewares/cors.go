@@ -2,7 +2,7 @@ package middlewares
 
 import "github.com/gofiber/fiber/v2"
 
-func CORSMiddleware(c *fiber.Ctx) error {
+func CORS(c *fiber.Ctx) error {
 
 	c.Request().Header.Set("Access-Control-Allow-Origin", "*")
 	c.Request().Header.Set("Access-Control-Allow-Credentials", "true")

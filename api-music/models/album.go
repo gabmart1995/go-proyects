@@ -11,6 +11,6 @@ type Album struct {
 	Image       string    `json:"image"`
 
 	// campos que representan las relaciones
-	Artist Artist `gorm:"foreignKey:AlbumId"`
-	Songs  []Song `gorm:"foreignKey:AlbumId"` // relacion one to many
+	Artist Artist `gorm:"foreignKey:AlbumId" validate:"omitempty"`
+	Songs  []Song `gorm:"foreignKey:AlbumId" validate:"omitempty"` // relacion one to many
 }

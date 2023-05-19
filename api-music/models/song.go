@@ -9,6 +9,13 @@ type Song struct {
 	Url     string `json:"url"`
 }
 
+type SongMigrate struct {
+	Id      int `gorm:"primaryKey,autoIncrement"`
+	AlbumId int // foreign key
+	Name    string
+	Url     string
+}
+
 type mapSongCallback func(song Song, index int, slice []Song) Song
 type filterSongCallback func(song Song, index int, slice []Song) bool
 

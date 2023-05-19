@@ -17,8 +17,8 @@ type User struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 
-	// campo que representa la relaciones
-	Album Album `gorm:"foreignKey:UserId"`
+	// campo que representa la relaciones no se va visualizar en BD
+	Albums []Album `json:"albums" gorm:"foreignKey:UserId" validate:"omitempty"`
 }
 
 type mapCallback func(user User, index int, slice []User) User
@@ -57,7 +57,32 @@ func (user *User) ValidateStruct() []*ErrorResponse {
 
 	validate := validator.New()
 
-	if err = validate.StructExcept(user, "User.Id"); err != nil {
+	if err = validate.Struct(user); err != nil {
+
+		// cambia la interface del error por uno personalizado
+		for _, err := range err.(validator.ValidationErrors) {
+			var element ErrorResponse
+			element.FailedField = err.StructNamespace()
+			element.Tag = err.Tag()
+			element.Value = err.Param()
+
+			errors = append(errors, &element)
+		}
+	}
+
+	return errors
+}
+
+func (user *User) ValidateStructLogin() []*ErrorResponse {
+	var (
+		errors []*ErrorResponse
+		err    error
+	)
+
+	validate := validator.New()
+
+	if err = validate.StructPartial(user, "User.Email", "User.Password"); err != nil {
+
 		// cambia la interface del error por uno personalizado
 		for _, err := range err.(validator.ValidationErrors) {
 			var element ErrorResponse
