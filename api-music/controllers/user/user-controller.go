@@ -292,8 +292,12 @@ func Login(c *fiber.Ctx, db *gorm.DB) error {
 		"status":  http.StatusOK,
 		"message": nil,
 		"data": fiber.Map{
-			"user":  userDB,
-			"token": token, // token jwt
+			"name":       userDB.Name,
+			"surname":    userDB.Surname,
+			"email":      userDB.Email,
+			"is_active":  userDB.IsActive,
+			"created_at": userDB.CreatedAt,
+			"token":      token, // token jwt
 		},
 	})
 }
