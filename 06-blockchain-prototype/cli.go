@@ -8,13 +8,11 @@ import (
 	"strconv"
 )
 
-type CLI struct {
-	bc *BlockChain
-}
+type CLI struct{}
 
 func (cli *CLI) printUsage() {
 	fmt.Println("Usage:")
-	fmt.Println("  addblock -data BLOCK_DATA - add a block to the blockchain")
+	fmt.Println("  createblockchain -address ADDRESS - Create a blockchain and send genesis block reward to ADDRESS")
 	fmt.Println("  printchain - print all the blocks of the blockchain")
 }
 
@@ -26,13 +24,15 @@ func (cli *CLI) validateArgs() {
 }
 
 func (cli *CLI) printChain() {
-	bci := cli.bc.Iterator()
+	bc := NewBlockChain("")
+	defer bc.db.Close()
+
+	bci := bc.Iterator()
 
 	for {
 		block := bci.Next()
 
 		fmt.Printf("Prev. hash: %x\n", block.PrevBlockHash)
-		fmt.Printf("Data: %s\n", block.Data)
 		fmt.Printf("Hash: %x\n", block.Hash)
 		pow := NewProofOfWork(block)
 		fmt.Printf("PoW: %s\n", strconv.FormatBool(pow.Validate()))
@@ -48,14 +48,14 @@ func (cli *CLI) printChain() {
 func (cli *CLI) Run() {
 	cli.validateArgs()
 
-	addBlockCmd := flag.NewFlagSet("addblock", flag.ExitOnError)
+	createBlockchainCmd := flag.NewFlagSet("createblockchain", flag.ExitOnError)
 	printChainCmd := flag.NewFlagSet("printchain", flag.ExitOnError)
 
-	addBlockData := addBlockCmd.String("data", "", "Block data")
+	createBlockchainAddress := createBlockchainCmd.String("address", "", "The address to send genesis block reward to")
 
 	switch os.Args[1] {
-	case "addblock":
-		if err := addBlockCmd.Parse(os.Args[2:]); err != nil {
+	case "createblockchain":
+		if err := createBlockchainCmd.Parse(os.Args[2:]); err != nil {
 			log.Fatal(err)
 		}
 
@@ -69,13 +69,13 @@ func (cli *CLI) Run() {
 		os.Exit(1)
 	}
 
-	if addBlockCmd.Parsed() {
-		if len(*addBlockData) == 0 {
-			addBlockCmd.Usage()
+	if createBlockchainCmd.Parsed() {
+		if len(*createBlockchainAddress) == 0 {
+			createBlockchainCmd.Usage()
 			os.Exit(1)
 		}
 
-		cli.addBlock(*addBlockData)
+		cli.createBlockchain(*createBlockchainAddress)
 	}
 
 	if printChainCmd.Parsed() {
@@ -83,8 +83,9 @@ func (cli *CLI) Run() {
 	}
 }
 
-func (cli *CLI) addBlock(data string) {
-	cli.bc.AddBlock(data)
+func (cli *CLI) createBlockchain(address string) {
+	bc := CreateBlockchain(address)
+	bc.db.Close()
 
-	fmt.Println("Success!")
+	fmt.Println("Done!")
 }

@@ -5,35 +5,22 @@ import (
 	"crypto/sha256"
 	"encoding/gob"
 	"log"
-	"strconv"
 	"time"
 )
 
 type Block struct {
 	Timestamp     int64
-	Data          []byte
+	Transactions  []*Transaction
 	PrevBlockHash []byte
 	Hash          []byte
 	Nonce         int
 }
 
-// establece el hash del bloque
-func (b *Block) SetHash() {
-	timestamp := []byte(strconv.FormatInt(b.Timestamp, 10))
-	headers := bytes.Join(
-		[][]byte{b.PrevBlockHash, b.Data, timestamp},
-		[]byte{},
-	)
-	hash := sha256.Sum256(headers)
-
-	b.Hash = hash[:]
-}
-
 // genera un nuevo bloque
-func NewBlock(data string, prevBlockHash []byte) *Block {
+func NewBlock(transactions []*Transaction, prevBlockHash []byte) *Block {
 	block := &Block{
 		Timestamp:     time.Now().Unix(),
-		Data:          []byte(data),
+		Transactions:  transactions,
 		PrevBlockHash: prevBlockHash,
 		Hash:          []byte{},
 		Nonce:         0,
@@ -49,8 +36,8 @@ func NewBlock(data string, prevBlockHash []byte) *Block {
 }
 
 // crea el bloque genesis
-func NewGenesisBlock() *Block {
-	return NewBlock("Genesis block", []byte{})
+func NewGenesisBlock(coinbase *Transaction) *Block {
+	return NewBlock([]*Transaction{coinbase}, []byte{})
 }
 
 // serializa el bloque
@@ -76,4 +63,18 @@ func DeserializeBlock(d []byte) *Block {
 	}
 
 	return &block
+}
+
+// genera un hash para las transacciones en cada bloque
+func (b *Block) HashTransactions() []byte {
+	var txHashes [][]byte
+	var txHash [32]byte
+
+	for _, tx := range b.Transactions {
+		txHashes = append(txHashes, tx.ID)
+	}
+
+	txHash = sha256.Sum256(bytes.Join(txHashes, []byte{}))
+
+	return txHash[:]
 }
