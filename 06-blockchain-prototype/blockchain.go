@@ -242,3 +242,30 @@ func (bc *BlockChain) FindUTXO(address string) []TXOutput {
 
 	return UTXOs
 }
+
+// retorna las salidas no gastadas en referencia a las entradas
+func (bc *BlockChain) FindSpendableOutputs(address string, amount int) (int, map[string][]int) {
+	unspentOutputs := make(map[string][]int)
+	unspentTXs := bc.FindUnspentTransactions(address)
+	accumulated := 0
+
+Work:
+	for _, tx := range unspentTXs {
+		txId := hex.EncodeToString(tx.ID)
+
+		for outIdx, out := range tx.Vout {
+			isOpenTx := out.CanBeUnlockedWith(address) && accumulated < amount
+
+			if isOpenTx {
+				accumulated += out.Value
+				unspentOutputs[txId] = append(unspentOutputs[txId], outIdx)
+
+				if accumulated >= amount {
+					break Work
+				}
+			}
+		}
+	}
+
+	return accumulated, unspentOutputs
+}

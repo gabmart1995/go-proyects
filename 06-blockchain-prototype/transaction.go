@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/gob"
+	"encoding/hex"
 	"fmt"
 	"log"
 )
@@ -84,4 +85,56 @@ func (tx Transaction) IsCoinbase() bool {
 	return len(tx.Vin) == 1 &&
 		len(tx.Vin[0].Txid) == 0 &&
 		tx.Vin[0].Vout == -1
+}
+
+// crea una nueva transaction
+func NewUTXOTransaction(from, to string, amount int, bc *BlockChain) *Transaction {
+	var inputs []TXInput
+	var outputs []TXOutput
+
+	acc, validOutputs := bc.FindSpendableOutputs(from, amount)
+
+	// verificamos saldo
+	if acc < amount {
+		log.Panic("Error: Not enough founds")
+	}
+
+	// construimos las entradas
+	for txId, outs := range validOutputs {
+		txID, err := hex.DecodeString(txId)
+
+		if err != nil {
+			log.Panic(err)
+		}
+
+		for _, out := range outs {
+			input := TXInput{
+				Txid:      txID,
+				Vout:      out,
+				ScriptSig: from,
+			}
+
+			inputs = append(inputs, input)
+		}
+	}
+
+	// construimos las salidas
+	outputs = append(outputs, TXOutput{Value: amount, ScriptPubKey: to})
+
+	if acc > amount {
+		outputs = append(outputs, TXOutput{
+			Value:        acc - amount,
+			ScriptPubKey: from,
+		})
+	}
+
+	tx := Transaction{
+		ID:   nil,
+		Vin:  inputs,
+		Vout: outputs,
+	}
+
+	tx.SetID()
+
+	return &tx
 }
