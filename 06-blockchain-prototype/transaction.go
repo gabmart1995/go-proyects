@@ -40,7 +40,6 @@ func (tx *Transaction) SetID() {
 
 	hash = sha256.Sum256(encoded.Bytes())
 	tx.ID = hash[:]
-
 }
 
 func NewCoinbaseTx(to, data string) *Transaction {
@@ -68,4 +67,21 @@ func NewCoinbaseTx(to, data string) *Transaction {
 	tx.SetID()
 
 	return &tx
+}
+
+// verifica si la direccion fue inicializada en la transaccion
+func (in *TXInput) CanUnlockOutputWith(unlockingData string) bool {
+	return in.ScriptSig == unlockingData
+}
+
+// verifica si la salida puede ser desbloqueda con la informacion proporcionada
+func (out *TXOutput) CanBeUnlockedWith(unlockingData string) bool {
+	return out.ScriptPubKey == unlockingData
+}
+
+// verifica si la transaccion es en moneda base
+func (tx Transaction) IsCoinbase() bool {
+	return len(tx.Vin) == 1 &&
+		len(tx.Vin[0].Txid) == 0 &&
+		tx.Vin[0].Vout == -1
 }

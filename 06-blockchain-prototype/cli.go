@@ -12,6 +12,7 @@ type CLI struct{}
 
 func (cli *CLI) printUsage() {
 	fmt.Println("Usage:")
+	fmt.Println("  getbalance -address ADDRESS - Get balance of ADDRESS")
 	fmt.Println("  createblockchain -address ADDRESS - Create a blockchain and send genesis block reward to ADDRESS")
 	fmt.Println("  printchain - print all the blocks of the blockchain")
 }
@@ -50,8 +51,10 @@ func (cli *CLI) Run() {
 
 	createBlockchainCmd := flag.NewFlagSet("createblockchain", flag.ExitOnError)
 	printChainCmd := flag.NewFlagSet("printchain", flag.ExitOnError)
+	getBalanceCmd := flag.NewFlagSet("getbalance", flag.ExitOnError)
 
 	createBlockchainAddress := createBlockchainCmd.String("address", "", "The address to send genesis block reward to")
+	getBalanceAddress := getBalanceCmd.String("address", "", "The address to get balance for")
 
 	switch os.Args[1] {
 	case "createblockchain":
@@ -61,6 +64,11 @@ func (cli *CLI) Run() {
 
 	case "printchain":
 		if err := printChainCmd.Parse(os.Args[2:]); err != nil {
+			log.Fatal(err)
+		}
+
+	case "getbalance":
+		if err := getBalanceCmd.Parse(os.Args[2:]); err != nil {
 			log.Fatal(err)
 		}
 
@@ -81,6 +89,15 @@ func (cli *CLI) Run() {
 	if printChainCmd.Parsed() {
 		cli.printChain()
 	}
+
+	if getBalanceCmd.Parsed() {
+		if len(*getBalanceAddress) == 0 {
+			getBalanceCmd.Usage()
+			os.Exit(1)
+		}
+
+		cli.getBalance(*getBalanceAddress)
+	}
 }
 
 func (cli *CLI) createBlockchain(address string) {
@@ -88,4 +105,18 @@ func (cli *CLI) createBlockchain(address string) {
 	bc.db.Close()
 
 	fmt.Println("Done!")
+}
+
+func (cli *CLI) getBalance(address string) {
+	bc := NewBlockChain(address)
+	defer bc.db.Close()
+
+	balance := 0
+	UTXOs := bc.FindUTXO(address)
+
+	for _, out := range UTXOs {
+		balance += out.Value
+	}
+
+	fmt.Printf("Balance of '%s': %d\n", address, balance)
 }
