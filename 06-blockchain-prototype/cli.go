@@ -13,6 +13,7 @@ func (cli *CLI) printUsage() {
 	fmt.Println("Usage:")
 	fmt.Println("  getbalance -address ADDRESS - Get balance of ADDRESS")
 	fmt.Println("  createblockchain -address ADDRESS - Create a blockchain and send genesis block reward to ADDRESS")
+	fmt.Println("  createwallet - Generates a new key-pair and saves it into the wallet file")
 	fmt.Println("  printchain - print all the blocks of the blockchain")
 	fmt.Println("  send -from FROM -to TO -amount AMOUNT - Send AMOUNT of coins from FROM address to TO")
 }
@@ -31,6 +32,7 @@ func (cli *CLI) Run() {
 	printChainCmd := flag.NewFlagSet("printchain", flag.ExitOnError)
 	getBalanceCmd := flag.NewFlagSet("getbalance", flag.ExitOnError)
 	sendCmd := flag.NewFlagSet("send", flag.ExitOnError)
+	createWalletCmd := flag.NewFlagSet("createwallet", flag.ExitOnError)
 
 	createBlockchainAddress := createBlockchainCmd.String("address", "", "The address to send genesis block reward to")
 	getBalanceAddress := getBalanceCmd.String("address", "", "The address to get balance for")
@@ -56,6 +58,11 @@ func (cli *CLI) Run() {
 
 	case "send":
 		if err := sendCmd.Parse(os.Args[2:]); err != nil {
+			log.Fatal(err)
+		}
+
+	case "createwallet":
+		if err := createWalletCmd.Parse(os.Args[2:]); err != nil {
 			log.Fatal(err)
 		}
 

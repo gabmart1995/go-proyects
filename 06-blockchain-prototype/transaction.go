@@ -2,6 +2,8 @@ package main
 
 import (
 	"bytes"
+	"crypto/ecdsa"
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/gob"
 	"encoding/hex"
@@ -17,30 +19,28 @@ type Transaction struct {
 	Vout []TXOutput
 }
 
-type TXInput struct {
-	Txid      []byte
-	Vout      int
-	ScriptSig string
-}
-
-type TXOutput struct {
-	Value        int
-	ScriptPubKey string
-}
-
-// establece el ID de la transaccion
-func (tx *Transaction) SetID() {
+func (tx Transaction) Serialize() []byte {
 	var encoded bytes.Buffer
-	var hash [32]byte
 
 	enc := gob.NewEncoder(&encoded)
 
 	if err := enc.Encode(tx); err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
-	hash = sha256.Sum256(encoded.Bytes())
-	tx.ID = hash[:]
+	return encoded.Bytes()
+}
+
+// hashea la transaccion
+func (tx *Transaction) Hash() []byte {
+	var hash [32]byte
+
+	txCopy := *tx
+	txCopy.ID = []byte{}
+
+	hash = sha256.Sum256(txCopy.Serialize())
+
+	return hash[:]
 }
 
 func NewCoinbaseTx(to, data string) *Transaction {
@@ -51,33 +51,21 @@ func NewCoinbaseTx(to, data string) *Transaction {
 	txin := TXInput{
 		Txid:      []byte{},
 		Vout:      -1,
-		ScriptSig: data,
+		Signature: nil,
+		PubKey:    []byte(data),
 	}
 
-	txout := TXOutput{
-		Value:        subsidy,
-		ScriptPubKey: to,
-	}
+	txout := NewTXOuput(subsidy, to)
 
 	tx := Transaction{
 		ID:   nil,
 		Vin:  []TXInput{txin},
-		Vout: []TXOutput{txout},
+		Vout: []TXOutput{*txout},
 	}
 
-	tx.SetID()
+	tx.ID = tx.Hash()
 
 	return &tx
-}
-
-// verifica si la direccion fue inicializada en la transaccion
-func (in *TXInput) CanUnlockOutputWith(unlockingData string) bool {
-	return in.ScriptSig == unlockingData
-}
-
-// verifica si la salida puede ser desbloqueda con la informacion proporcionada
-func (out *TXOutput) CanBeUnlockedWith(unlockingData string) bool {
-	return out.ScriptPubKey == unlockingData
 }
 
 // verifica si la transaccion es en moneda base
@@ -92,7 +80,16 @@ func NewUTXOTransaction(from, to string, amount int, bc *BlockChain) *Transactio
 	var inputs []TXInput
 	var outputs []TXOutput
 
-	acc, validOutputs := bc.FindSpendableOutputs(from, amount)
+	// generamos los wallets
+	wallets, err := NewWallets()
+
+	if err != nil {
+		log.Panic(err)
+	}
+
+	wallet := wallets.GetWallet(from)
+	pubKeyHash := HashPubKey(wallet.PublicKey)
+	acc, validOutputs := bc.FindSpendableOutputs(pubKeyHash, amount)
 
 	// verificamos saldo
 	if acc < amount {
@@ -111,7 +108,8 @@ func NewUTXOTransaction(from, to string, amount int, bc *BlockChain) *Transactio
 			input := TXInput{
 				Txid:      txID,
 				Vout:      out,
-				ScriptSig: from,
+				Signature: nil,
+				PubKey:    wallet.PublicKey,
 			}
 
 			inputs = append(inputs, input)
@@ -119,13 +117,9 @@ func NewUTXOTransaction(from, to string, amount int, bc *BlockChain) *Transactio
 	}
 
 	// construimos las salidas
-	outputs = append(outputs, TXOutput{Value: amount, ScriptPubKey: to})
-
+	outputs = append(outputs, *NewTXOuput(amount, from))
 	if acc > amount {
-		outputs = append(outputs, TXOutput{
-			Value:        acc - amount,
-			ScriptPubKey: from,
-		})
+		outputs = append(outputs, *NewTXOuput(acc-amount, from))
 	}
 
 	tx := Transaction{
@@ -134,7 +128,76 @@ func NewUTXOTransaction(from, to string, amount int, bc *BlockChain) *Transactio
 		Vout: outputs,
 	}
 
-	tx.SetID()
+	tx.ID = tx.Hash()
+
+	// por ultimo firmamos la transaccion con la clave privada
+	bc.SignTransaction(&tx, wallet.PrivateKey)
 
 	return &tx
+}
+
+func (tx *Transaction) Sign(privKey ecdsa.PrivateKey, prevTXs map[string]Transaction) {
+	if tx.IsCoinbase() {
+		return
+	}
+
+	// verificamos si la transacion fue correcta
+	for _, vin := range tx.Vin {
+		if prevTXs[hex.EncodeToString(vin.Txid)].ID == nil {
+			log.Panic("ERROR: Previous transaction not correct")
+		}
+	}
+
+	// creamos una copia
+	txCopy := tx.TrimmedCopy()
+
+	// establecemos los campos de la firma
+	for inID, vin := range txCopy.Vin {
+		prevTX := prevTXs[hex.EncodeToString(vin.Txid)]
+
+		txCopy.Vin[inID].Signature = nil
+		txCopy.Vin[inID].PubKey = prevTX.Vout[vin.Vout].PubKeyHash
+		txCopy.ID = txCopy.Hash()
+		txCopy.Vin[inID].PubKey = nil
+
+		// establecemos la firma
+		r, s, err := ecdsa.Sign(rand.Reader, &privKey, txCopy.ID)
+
+		if err != nil {
+			log.Panic(err)
+		}
+
+		signature := append(r.Bytes(), s.Bytes()...)
+
+		tx.Vin[inID].Signature = signature
+	}
+}
+
+func (tx *Transaction) TrimmedCopy() Transaction {
+	var inputs []TXInput
+	var outputs []TXOutput
+
+	for _, vin := range tx.Vin {
+		inputs = append(inputs, TXInput{
+			Txid:      vin.Txid,
+			Vout:      vin.Vout,
+			Signature: nil,
+			PubKey:    nil,
+		})
+	}
+
+	for _, vout := range tx.Vout {
+		outputs = append(outputs, TXOutput{
+			Value:      vout.Value,
+			PubKeyHash: vout.PubKeyHash,
+		})
+	}
+
+	txCopy := Transaction{
+		ID:   tx.ID,
+		Vin:  inputs,
+		Vout: outputs,
+	}
+
+	return txCopy
 }
