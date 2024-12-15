@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 )
 
 type CLI struct{}
@@ -22,28 +21,6 @@ func (cli *CLI) validateArgs() {
 	if len(os.Args) < 2 {
 		cli.printUsage()
 		os.Exit(1)
-	}
-}
-
-func (cli *CLI) printChain() {
-	bc := NewBlockChain("")
-	defer bc.db.Close()
-
-	bci := bc.Iterator()
-
-	for {
-		block := bci.Next()
-
-		fmt.Printf("Prev. hash: %x\n", block.PrevBlockHash)
-		fmt.Printf("Hash: %x\n", block.Hash)
-		pow := NewProofOfWork(block)
-		fmt.Printf("PoW: %s\n", strconv.FormatBool(pow.Validate()))
-		fmt.Println()
-
-		// cuando no halla mas hash en la cadena de bloques salimos
-		if len(block.PrevBlockHash) == 0 {
-			break
-		}
 	}
 }
 
@@ -119,35 +96,4 @@ func (cli *CLI) Run() {
 
 		cli.send(*sendFrom, *sendTo, *sendAmount)
 	}
-}
-
-func (cli *CLI) createBlockchain(address string) {
-	bc := CreateBlockchain(address)
-	bc.db.Close()
-
-	fmt.Println("Done!")
-}
-
-func (cli *CLI) getBalance(address string) {
-	bc := NewBlockChain(address)
-	defer bc.db.Close()
-
-	balance := 0
-	UTXOs := bc.FindUTXO(address)
-
-	for _, out := range UTXOs {
-		balance += out.Value
-	}
-
-	fmt.Printf("Balance of '%s': %d\n", address, balance)
-}
-
-func (cli *CLI) send(from, to string, amount int) {
-	bc := NewBlockChain(from)
-	defer bc.db.Close()
-
-	tx := NewUTXOTransaction(from, to, amount, bc)
-	bc.MineBlock([]*Transaction{tx})
-
-	fmt.Println("Success !")
 }
