@@ -103,4 +103,8 @@ func (cli *CLI) Run() {
 
 		cli.send(*sendFrom, *sendTo, *sendAmount)
 	}
+
+	if createWalletCmd.Parsed() {
+		cli.CreateWallet()
+	}
 }

@@ -5,6 +5,7 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
+	"encoding/json"
 	"log"
 
 	"golang.org/x/crypto/ripemd160"
@@ -17,7 +18,7 @@ import (
 
 const version = byte(0x00)
 const addressChecksumLen = 4
-const walletFile = "wallet.dat"
+const walletFile = "wallet.json"
 
 type Wallet struct {
 	PrivateKey ecdsa.PrivateKey
@@ -90,4 +91,21 @@ func checksum(payload []byte) []byte {
 	secondSHA := sha256.Sum256(firstSHA[:])
 
 	return secondSHA[:addressChecksumLen]
+}
+
+// transforma la informacion del wallet en un JSON
+func (w Wallet) MarshalJSON() ([]byte, error) {
+	mapStringAny := map[string]any{
+		"PrivateKey": map[string]any{
+			"D": w.PrivateKey.D,
+			"PublicKey": map[string]any{
+				"X": w.PrivateKey.PublicKey.X,
+				"Y": w.PrivateKey.PublicKey.Y,
+			},
+			"X": w.PrivateKey.X,
+			"Y": w.PrivateKey.Y,
+		},
+		"PublicKey": w.PublicKey,
+	}
+	return json.Marshal(mapStringAny)
 }
