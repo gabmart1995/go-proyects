@@ -79,7 +79,7 @@ func (tx Transaction) IsCoinbase() bool {
 }
 
 // crea una nueva transaction
-func NewUTXOTransaction(from, to string, amount int, bc *BlockChain) *Transaction {
+func NewUTXOTransaction(from, to string, amount int, UTXOSet *UTXOSet) *Transaction {
 	var inputs []TXInput
 	var outputs []TXOutput
 
@@ -92,7 +92,7 @@ func NewUTXOTransaction(from, to string, amount int, bc *BlockChain) *Transactio
 
 	wallet := wallets.GetWallet(from)
 	pubKeyHash := HashPubKey(wallet.PublicKey)
-	acc, validOutputs := bc.FindSpendableOutputs(pubKeyHash, amount)
+	acc, validOutputs := UTXOSet.FindSpendableOutputs(pubKeyHash, amount)
 
 	// verificamos saldo
 	if acc < amount {
@@ -133,7 +133,7 @@ func NewUTXOTransaction(from, to string, amount int, bc *BlockChain) *Transactio
 	tx.ID = tx.Hash()
 
 	// por ultimo firmamos la transaccion con la clave privada
-	bc.SignTransaction(&tx, wallet.PrivateKey)
+	UTXOSet.Blockchain.SignTransaction(&tx, wallet.PrivateKey)
 
 	return &tx
 }

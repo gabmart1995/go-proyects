@@ -14,7 +14,6 @@ import (
 
 const dbFile = "blockchain.db"
 const blocksBucket = "blocks"
-
 const genesisCoinbaseData = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks"
 
 type BlockChain struct {
@@ -22,7 +21,7 @@ type BlockChain struct {
 	db  *bolt.DB
 }
 
-func (bc *BlockChain) MineBlock(transactions []*Transaction) {
+func (bc *BlockChain) MineBlock(transactions []*Transaction) *Block {
 	var lastHash []byte
 
 	for _, tx := range transactions {
@@ -66,6 +65,8 @@ func (bc *BlockChain) MineBlock(transactions []*Transaction) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	return newBlock
 }
 
 func NewBlockChain(address string) *BlockChain {
@@ -211,48 +212,48 @@ func (bc *BlockChain) FindUnspentTransactions(pubKeyHash []byte) []Transaction {
 }
 
 // retorna todas las salidas de transacciones que no fueron gastadas
-func (bc *BlockChain) FindUTXO(pubKeyHash []byte) []TXOutput {
-	var UTXOs []TXOutput
-	unspentTransactions := bc.FindUnspentTransactions(pubKeyHash)
+func (bc *BlockChain) FindUTXO() map[string]TXOutputs {
+	UTXO := make(map[string]TXOutputs)
+	spentTXOs := make(map[string][]int)
+	bci := bc.Iterator()
 
-	for _, tx := range unspentTransactions {
-		for _, out := range tx.Vout {
-			if out.IsLockedWithKey(pubKeyHash) {
-				UTXOs = append(UTXOs, out)
+	for {
+		block := bci.Next()
+
+		for _, tx := range block.Transactions {
+			txID := hex.EncodeToString(tx.ID)
+
+		Outputs:
+			for outIdx, out := range tx.Vout {
+				// verificamos si la salda fue gastada
+				if spentTXOs[txID] != nil {
+					for _, spentOutIdx := range spentTXOs[txID] {
+						if spentOutIdx == outIdx {
+							continue Outputs
+						}
+					}
+				}
+
+				// establece la transaccion
+				outs := UTXO[txID]
+				outs.Outputs = append(outs.Outputs, out)
+				UTXO[txID] = outs
 			}
-		}
-	}
 
-	return UTXOs
-}
-
-// retorna las salidas no gastadas en referencia a las entradas
-func (bc *BlockChain) FindSpendableOutputs(pubKeyHash []byte, amount int) (int, map[string][]int) {
-	unspentOutputs := make(map[string][]int)
-	unspentTXs := bc.FindUnspentTransactions(pubKeyHash)
-	accumulated := 0
-
-Work:
-	for _, tx := range unspentTXs {
-		txId := hex.EncodeToString(tx.ID)
-
-		for outIdx, out := range tx.Vout {
-			isOpenTx := out.IsLockedWithKey(pubKeyHash) && accumulated < amount
-
-			if isOpenTx {
-				accumulated += out.Value
-				unspentOutputs[txId] = append(unspentOutputs[txId], outIdx)
-
-				if accumulated >= amount {
-					break Work
+			if !tx.IsCoinbase() {
+				for _, in := range tx.Vin {
+					inTXID := hex.EncodeToString(in.Txid)
+					spentTXOs[inTXID] = append(spentTXOs[inTXID], in.Vout)
 				}
 			}
 		}
+
+		if len(block.PrevBlockHash) == 0 {
+			break
+		}
 	}
 
-	//fmt.Printf("accumulated %d\n", accumulated)
-
-	return accumulated, unspentOutputs
+	return UTXO
 }
 
 // agrupa las transacciones y por ultimo las firma

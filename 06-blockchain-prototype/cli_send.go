@@ -15,10 +15,14 @@ func (cli *CLI) send(from, to string, amount int) {
 	}
 
 	bc := NewBlockChain(from)
+	UTXOSet := UTXOSet{bc}
+
 	defer bc.db.Close()
 
-	tx := NewUTXOTransaction(from, to, amount, bc)
-	bc.MineBlock([]*Transaction{tx})
+	tx := NewUTXOTransaction(from, to, amount, &UTXOSet)
+	newBlock := bc.MineBlock([]*Transaction{tx})
+
+	UTXOSet.Update(newBlock)
 
 	fmt.Println("Success !")
 }

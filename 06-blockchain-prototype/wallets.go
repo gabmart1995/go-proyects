@@ -40,13 +40,6 @@ func (ws *Wallets) LoadFromFile() error {
 		log.Panic(err)
 	}
 
-	// OLD CODE go 1.18
-	/*gob.Register(elliptic.P256())
-	decoder := gob.NewDecoder(bytes.NewReader(fileContent))
-	if err := decoder.Decode(&wallets); err != nil {
-		log.Panic(err)
-	}*/
-
 	ws.Wallets = wallets.Wallets
 
 	return nil
@@ -77,11 +70,6 @@ func (ws Wallets) SaveToFile() {
 	}
 
 	err = os.WriteFile(walletFile, content.Bytes(), 0644)
-
-	// OLD CODE go 1.18
-	/*var content bytes.Buffer
-	gob.Register(elliptic.P256())
-	err = os.WriteFile(walletFile, content.Bytes(), 0644)*/
 
 	if err != nil {
 		log.Panic(err)
