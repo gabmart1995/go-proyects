@@ -104,17 +104,17 @@ func CreateBlockchain(address string) *BlockChain {
 		os.Exit(1)
 	}
 
+	cbtx := NewCoinbaseTx(address, genesisCoinbaseData)
+	genesis := NewGenesisBlock(cbtx)
+
 	var tip []byte
 	db, err := bolt.Open(dbFile, 0600, nil)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	err = db.Update(func(tx *bolt.Tx) error {
-		cbtx := NewCoinbaseTx(address, genesisCoinbaseData)
-		genesis := NewGenesisBlock(cbtx)
-
 		b, err := tx.CreateBucket([]byte(blocksBucket))
 		if err != nil {
 			log.Panic(err)
@@ -134,7 +134,7 @@ func CreateBlockchain(address string) *BlockChain {
 	})
 
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	bc := BlockChain{tip, db}
@@ -269,6 +269,7 @@ func (bc *BlockChain) SignTransaction(tx *Transaction, privKey ecdsa.PrivateKey)
 		prevTXs[hex.EncodeToString(prevTX.ID)] = prevTX
 	}
 
+	tx.Sign(privKey, prevTXs)
 }
 
 // Localiza la transaccion por ID
@@ -306,7 +307,7 @@ func (bc *BlockChain) VerifyTransaction(tx *Transaction) bool {
 	}
 
 	// fmt.Println(prevTXs)
-	fmt.Printf("result: %t\n", tx.Verify(prevTXs))
+	// fmt.Printf("result: %t\n", tx.Verify(prevTXs))
 
 	return tx.Verify(prevTXs)
 }

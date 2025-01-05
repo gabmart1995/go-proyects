@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"crypto/elliptic"
 	"encoding/gob"
 	"log"
 	"os"
@@ -35,17 +34,18 @@ func (ws *Wallets) LoadFromFile() error {
 	}
 
 	var wallets Wallets
-
-	/*if err := json.Unmarshal(fileContent, &wallets); err != nil {
-		log.Panic(err)
-	}*/
-
-	// OLD CODE go 1.18
-	gob.Register(elliptic.P256())
 	decoder := gob.NewDecoder(bytes.NewReader(fileContent))
+
 	if err := decoder.Decode(&wallets); err != nil {
 		log.Panic(err)
 	}
+
+	// OLD CODE go 1.18
+	/*gob.Register(elliptic.P256())
+	decoder := gob.NewDecoder(bytes.NewReader(fileContent))
+	if err := decoder.Decode(&wallets); err != nil {
+		log.Panic(err)
+	}*/
 
 	ws.Wallets = wallets.Wallets
 
@@ -68,11 +68,7 @@ func (ws *Wallets) CreateWallet() string {
 }
 
 func (ws Wallets) SaveToFile() {
-	//jsonData, err := json.Marshal(ws)
-
-	// OLD CODE go 1.18
 	var content bytes.Buffer
-	gob.Register(elliptic.P256())
 	encoder := gob.NewEncoder(&content)
 	err := encoder.Encode(ws)
 
@@ -81,7 +77,11 @@ func (ws Wallets) SaveToFile() {
 	}
 
 	err = os.WriteFile(walletFile, content.Bytes(), 0644)
-	// err = os.WriteFile(walletFile, jsonData, 0644)
+
+	// OLD CODE go 1.18
+	/*var content bytes.Buffer
+	gob.Register(elliptic.P256())
+	err = os.WriteFile(walletFile, content.Bytes(), 0644)*/
 
 	if err != nil {
 		log.Panic(err)

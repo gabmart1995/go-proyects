@@ -1,8 +1,19 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"log"
+)
 
 func (cli *CLI) send(from, to string, amount int) {
+	if !ValidateAddress(from) {
+		log.Panic("ERROR: sender address is not valid")
+	}
+
+	if !ValidateAddress(to) {
+		log.Panic("ERROR: recipent address is not valid")
+	}
+
 	bc := NewBlockChain(from)
 	defer bc.db.Close()
 

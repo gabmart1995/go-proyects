@@ -92,6 +92,9 @@ func NewUTXOTransaction(from, to string, amount int, bc *BlockChain) *Transactio
 
 	wallet := wallets.GetWallet(from)
 	pubKeyHash := HashPubKey(wallet.PublicKey)
+
+	fmt.Println(fmt.Sprintf("public key from:  %x", string(pubKeyHash)))
+
 	acc, validOutputs := bc.FindSpendableOutputs(pubKeyHash, amount)
 
 	// verificamos saldo
@@ -171,9 +174,7 @@ func (tx *Transaction) Sign(privKey ecdsa.PrivateKey, prevTXs map[string]Transac
 			log.Panic(err)
 		}
 
-		signature := append(r.Bytes(), s.Bytes()...)
-
-		tx.Vin[inID].Signature = signature
+		tx.Vin[inID].Signature = append(r.Bytes(), s.Bytes()...)
 	}
 }
 
@@ -182,19 +183,11 @@ func (tx *Transaction) TrimmedCopy() Transaction {
 	var outputs []TXOutput
 
 	for _, vin := range tx.Vin {
-		inputs = append(inputs, TXInput{
-			Txid:      vin.Txid,
-			Vout:      vin.Vout,
-			Signature: nil,
-			PubKey:    nil,
-		})
+		inputs = append(inputs, TXInput{vin.Txid, vin.Vout, nil, nil})
 	}
 
 	for _, vout := range tx.Vout {
-		outputs = append(outputs, TXOutput{
-			Value:      vout.Value,
-			PubKeyHash: vout.PubKeyHash,
-		})
+		outputs = append(outputs, TXOutput{vout.Value, vout.PubKeyHash})
 	}
 
 	txCopy := Transaction{
@@ -228,14 +221,12 @@ func (tx *Transaction) Verify(prevTXs map[string]Transaction) bool {
 		txCopy.ID = txCopy.Hash()
 		txCopy.Vin[inID].PubKey = nil
 
-		r := big.Int{}
-		s := big.Int{}
+		r, s := big.Int{}, big.Int{}
 		sigLen := len(vin.Signature)
 		r.SetBytes(vin.Signature[:(sigLen / 2)])
 		s.SetBytes(vin.Signature[(sigLen / 2):])
 
-		x := big.Int{}
-		y := big.Int{}
+		x, y := big.Int{}, big.Int{}
 		keyLen := len(vin.PubKey)
 		x.SetBytes(vin.PubKey[:(keyLen / 2)])
 		y.SetBytes(vin.PubKey[(keyLen / 2):])
