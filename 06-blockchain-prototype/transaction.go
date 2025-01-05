@@ -235,7 +235,7 @@ func (tx *Transaction) Verify(prevTXs map[string]Transaction) bool {
 	return true
 }
 
-// muestra las transacciones realizadas
+// muestra las transacciones realizadas en formato string
 func (tx Transaction) String() string {
 	var lines []string
 
