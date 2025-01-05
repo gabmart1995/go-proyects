@@ -255,7 +255,7 @@ Work:
 	return accumulated, unspentOutputs
 }
 
-// firma la transaccion
+// agrupa las transacciones y por ultimo las firma
 func (bc *BlockChain) SignTransaction(tx *Transaction, privKey ecdsa.PrivateKey) {
 	prevTXs := make(map[string]Transaction)
 
@@ -269,6 +269,7 @@ func (bc *BlockChain) SignTransaction(tx *Transaction, privKey ecdsa.PrivateKey)
 		prevTXs[hex.EncodeToString(prevTX.ID)] = prevTX
 	}
 
+	// firma la transaccion
 	tx.Sign(privKey, prevTXs)
 }
 

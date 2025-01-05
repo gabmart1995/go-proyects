@@ -92,9 +92,6 @@ func NewUTXOTransaction(from, to string, amount int, bc *BlockChain) *Transactio
 
 	wallet := wallets.GetWallet(from)
 	pubKeyHash := HashPubKey(wallet.PublicKey)
-
-	fmt.Println(fmt.Sprintf("public key from:  %x", string(pubKeyHash)))
-
 	acc, validOutputs := bc.FindSpendableOutputs(pubKeyHash, amount)
 
 	// verificamos saldo
@@ -137,8 +134,6 @@ func NewUTXOTransaction(from, to string, amount int, bc *BlockChain) *Transactio
 
 	// por ultimo firmamos la transaccion con la clave privada
 	bc.SignTransaction(&tx, wallet.PrivateKey)
-
-	//fmt.Println(inputs, outputs)
 
 	return &tx
 }

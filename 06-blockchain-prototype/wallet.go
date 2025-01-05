@@ -105,7 +105,6 @@ func ValidateAddress(address string) bool {
 	pubKeyHash := Base58Decode([]byte(address))
 	actualChecksum := pubKeyHash[len(pubKeyHash)-addressChecksumLen:]
 	version := pubKeyHash[0]
-
 	pubKeyHash = pubKeyHash[1 : len(pubKeyHash)-addressChecksumLen]
 	targetChecksum := checksum(append([]byte{version}, pubKeyHash...))
 
@@ -113,7 +112,7 @@ func ValidateAddress(address string) bool {
 }
 
 // funcion que permite crear una interfaz para la clave privada
-// para que luego pueda ser endodeada
+// para que luego pueda ser endodeada por el GOB
 func (w *Wallet) GobEncode() ([]byte, error) {
 	privateKey := &_PrivateKey{
 		D:          w.PrivateKey.D,
@@ -140,6 +139,7 @@ func (w *Wallet) GobEncode() ([]byte, error) {
 }
 
 // metodo que establece las claves dentro del archivo del wallet
+// siendo decodeada por el GOB
 func (w *Wallet) GobDecode(data []byte) error {
 	var privKey _PrivateKey
 
