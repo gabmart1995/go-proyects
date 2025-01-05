@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"log"
 	"math/big"
+	"strings"
 )
 
 const subsidy = 10
@@ -129,13 +130,12 @@ func NewUTXOTransaction(from, to string, amount int, bc *BlockChain) *Transactio
 		Vin:  inputs,
 		Vout: outputs,
 	}
-
 	tx.ID = tx.Hash()
-
-	//fmt.Println(inputs, outputs)
 
 	// por ultimo firmamos la transaccion con la clave privada
 	bc.SignTransaction(&tx, wallet.PrivateKey)
+
+	//fmt.Println(inputs, outputs)
 
 	return &tx
 }
@@ -247,4 +247,27 @@ func (tx *Transaction) Verify(prevTXs map[string]Transaction) bool {
 	}
 
 	return true
+}
+
+// muestra las transacciones realizadas
+func (tx Transaction) String() string {
+	var lines []string
+
+	lines = append(lines, fmt.Sprintf("--- Transaction %x", tx.ID))
+
+	for i, input := range tx.Vin {
+		lines = append(lines, fmt.Sprintf("		Input %d:", i))
+		lines = append(lines, fmt.Sprintf("       TXID:      %x", input.Txid))
+		lines = append(lines, fmt.Sprintf("       Out:       %d", input.Vout))
+		lines = append(lines, fmt.Sprintf("       Signature: %x", input.Signature))
+		lines = append(lines, fmt.Sprintf("       PubKey:    %x", input.PubKey))
+	}
+
+	for i, output := range tx.Vout {
+		lines = append(lines, fmt.Sprintf("     Output %d:", i))
+		lines = append(lines, fmt.Sprintf("       Value:  %d", output.Value))
+		lines = append(lines, fmt.Sprintf("       Script: %x", output.PubKeyHash))
+	}
+
+	return strings.Join(lines, "\n")
 }
