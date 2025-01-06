@@ -75,3 +75,13 @@ func (ws Wallets) SaveToFile() {
 		log.Panic(err)
 	}
 }
+
+func (ws *Wallets) GetAddresses() []string {
+	var addresses []string
+
+	for address := range ws.Wallets {
+		addresses = append(addresses, address)
+	}
+
+	return addresses
+}

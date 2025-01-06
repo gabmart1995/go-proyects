@@ -69,7 +69,7 @@ func (bc *BlockChain) MineBlock(transactions []*Transaction) *Block {
 	return newBlock
 }
 
-func NewBlockChain(address string) *BlockChain {
+func NewBlockChain() *BlockChain {
 	if !dbExists() {
 		fmt.Println("No existing blockchain found. Create one first")
 		os.Exit(1)

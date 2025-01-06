@@ -10,7 +10,7 @@ func (cli *CLI) getBalance(address string) {
 		log.Panic("ERROR: Address is not valid")
 	}
 
-	bc := NewBlockChain(address)
+	bc := NewBlockChain()
 	UTXOSet := UTXOSet{bc}
 	defer bc.db.Close()
 

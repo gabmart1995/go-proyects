@@ -14,7 +14,7 @@ func (cli *CLI) send(from, to string, amount int) {
 		log.Panic("ERROR: recipent address is not valid")
 	}
 
-	bc := NewBlockChain(from)
+	bc := NewBlockChain()
 	UTXOSet := UTXOSet{bc}
 
 	defer bc.db.Close()
