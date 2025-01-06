@@ -48,7 +48,13 @@ func (tx *Transaction) Hash() []byte {
 
 func NewCoinbaseTx(to, data string) *Transaction {
 	if len(data) == 0 {
-		data = fmt.Sprintf("Reward to '%s'", to)
+		randData := make([]byte, 20)
+
+		if _, err := rand.Read(randData); err != nil {
+			log.Panic(err)
+		}
+
+		data = fmt.Sprintf("%x", randData)
 	}
 
 	txin := TXInput{

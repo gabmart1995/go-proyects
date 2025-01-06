@@ -20,7 +20,8 @@ func (cli *CLI) send(from, to string, amount int) {
 	defer bc.db.Close()
 
 	tx := NewUTXOTransaction(from, to, amount, &UTXOSet)
-	newBlock := bc.MineBlock([]*Transaction{tx})
+	cbTx := NewCoinbaseTx(from, "")
+	newBlock := bc.MineBlock([]*Transaction{cbTx, tx})
 
 	UTXOSet.Update(newBlock)
 
