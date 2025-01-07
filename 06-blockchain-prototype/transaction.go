@@ -257,3 +257,14 @@ func (tx Transaction) String() string {
 
 	return strings.Join(lines, "\n")
 }
+
+func DeserializeTransaction(data []byte) Transaction {
+	var transaction Transaction
+
+	decoder := gob.NewDecoder(bytes.NewReader(data))
+	if err := decoder.Decode(&transaction); err != nil {
+		log.Panic(err)
+	}
+
+	return transaction
+}

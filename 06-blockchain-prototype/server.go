@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/gob"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"log"
@@ -19,6 +20,7 @@ var nodeAddress string
 var knownNodes = []string{"localhost:3000"}
 var miningAddress string
 var blocksInTransit = [][]byte{}
+var mempool = make(map[string]Transaction)
 
 const (
 	protocol      = "tcp"
@@ -54,6 +56,12 @@ type getdata struct {
 type tx struct {
 	AddFrom     string
 	Transaction []byte
+}
+
+type inv struct {
+	AddrFrom string
+	Type     string
+	Items    [][]byte
 }
 
 func StartServer(nodeID, minerAddress string) {
@@ -183,8 +191,24 @@ func handleConnection(conn net.Conn, bc *BlockChain) {
 	switch command {
 	case "addr":
 		handleAddr(request)
+
 	case "block":
 		handleBlock(request, bc)
+
+	case "inv":
+		handleInv(request)
+
+	case "getblocks":
+		handleGetBlocks(request, bc)
+
+	case "getdata":
+		handleGetData(request, bc)
+
+	case "tx":
+		handleTx(request, bc)
+
+	case "version":
+		handleVersion(request, bc)
 
 	default:
 		fmt.Println("Unknown command!")
@@ -252,6 +276,175 @@ func handleBlock(request []byte, bc *BlockChain) {
 	}
 }
 
+func handleInv(request []byte) {
+	var (
+		buff    bytes.Buffer
+		payload inv
+	)
+
+	if _, err := buff.Write(request[commandLength:]); err != nil {
+		log.Panic(err)
+	}
+
+	decoder := gob.NewDecoder(&buff)
+	if err := decoder.Decode(&payload); err != nil {
+		log.Panic(err)
+	}
+
+	fmt.Printf("Recevied inventory with %d %s\n", len(payload.Items), payload.Type)
+
+	if payload.Type == "block" {
+		blocksInTransit = payload.Items
+		blockHash := payload.Items[0]
+
+		sendGetData(payload.AddrFrom, "block", blockHash)
+
+		newInTransit := [][]byte{}
+		for _, b := range blocksInTransit {
+			if !bytes.Equal(b, blockHash) {
+				newInTransit = append(newInTransit, b)
+			}
+		}
+
+		blocksInTransit = newInTransit
+	}
+
+	if payload.Type == "tx" {
+		txID := payload.Items[0]
+
+		if mempool[hex.EncodeToString(txID)].ID == nil {
+			sendGetData(payload.AddrFrom, "tx", txID)
+		}
+	}
+}
+
+func handleGetBlocks(request []byte, bc *BlockChain) {
+	var (
+		buff    bytes.Buffer
+		payload getblocks
+	)
+
+	if _, err := buff.Write(request[commandLength:]); err != nil {
+		log.Panic(err)
+	}
+
+	decoder := gob.NewDecoder(&buff)
+	if err := decoder.Decode(&payload); err != nil {
+		log.Panic(err)
+	}
+
+	blocks := bc.GetBlockHashes()
+	sendInv(payload.AddrFrom, "block", blocks)
+}
+
+func handleGetData(request []byte, bc *BlockChain) {
+	var (
+		buff    bytes.Buffer
+		payload getdata
+	)
+
+	if _, err := buff.Write(request[commandLength:]); err != nil {
+		log.Panic(err)
+	}
+
+	decoder := gob.NewDecoder(&buff)
+	if err := decoder.Decode(&payload); err != nil {
+		log.Panic(err)
+	}
+
+	if payload.Type == "block" {
+		block, err := bc.GetBlock([]byte(payload.ID))
+
+		if err != nil {
+			return
+		}
+
+		sendBlock(payload.AddrFrom, &block)
+	}
+
+	if payload.Type == "tx" {
+		txID := hex.EncodeToString(payload.ID)
+		tx := mempool[txID]
+
+		sendTx(payload.AddrFrom, &tx)
+	}
+}
+
+func handleTx(request []byte, bc *BlockChain) {
+	var (
+		buff    bytes.Buffer
+		payload tx
+	)
+
+	if _, err := buff.Write(request[commandLength:]); err != nil {
+		log.Panic(err)
+	}
+
+	decoder := gob.NewDecoder(&buff)
+	if err := decoder.Decode(&payload); err != nil {
+		log.Panic(err)
+	}
+
+	txData := payload.Transaction
+	tx := DeserializeTransaction(txData)
+
+	mempool[hex.EncodeToString(tx.ID)] = tx
+
+	if nodeAddress == knownNodes[0] {
+		for _, node := range knownNodes {
+			if node != nodeAddress && node != payload.AddFrom {
+				sendInv(node, "tx", [][]byte{tx.ID})
+			}
+		}
+
+	} else {
+		if len(mempool) >= 2 && len(miningAddress) > 0 {
+		MineTransactions:
+
+			var txs []*Transaction
+
+			for id := range mempool {
+				tx := mempool[id]
+
+				if bc.VerifyTransaction(&tx) {
+					txs = append(txs, &tx)
+				}
+			}
+
+			if len(txs) == 0 {
+				fmt.Println("All transactions are invalid! Waiting for new ones...")
+				return
+			}
+
+			cbTx := NewCoinbaseTx(miningAddress, "")
+			txs = append(txs, cbTx)
+
+			newBlock := bc.MineBlock(txs)
+			UTXOSet := UTXOSet{
+				Blockchain: bc,
+			}
+			UTXOSet.Reindex()
+
+			fmt.Println("New block is mined!")
+
+			for _, tx := range txs {
+				txID := hex.EncodeToString(tx.ID)
+				delete(mempool, txID)
+			}
+
+			for _, node := range knownNodes {
+				if node != nodeAddress {
+					sendInv(node, "block", [][]byte{newBlock.Hash})
+				}
+			}
+
+			if len(mempool) > 0 {
+				goto MineTransactions
+			}
+		}
+	}
+}
+
 func requestBlocks() {
 	for _, node := range knownNodes {
 		sendGetBlocks(node)
@@ -283,6 +476,30 @@ func sendTx(addr string, tnx *Transaction) {
 	}
 	payload := gobEncode(data)
 	request := append(commandToBytes("tx"), payload...)
+
+	sendData(addr, request)
+}
+
+func sendInv(address, kind string, items [][]byte) {
+	inventory := inv{
+		AddrFrom: nodeAddress,
+		Type:     kind,
+		Items:    items,
+	}
+	payload := gobEncode(inventory)
+	request := append(commandToBytes("inv"), payload...)
+
+	sendData(address, request)
+}
+
+func sendBlock(addr string, b *Block) {
+	data := block{
+		AddrFrom: nodeAddress,
+		Block:    b.Serialize(),
+	}
+
+	payload := gobEncode(data)
+	request := append(commandToBytes("block"), payload...)
 
 	sendData(addr, request)
 }
