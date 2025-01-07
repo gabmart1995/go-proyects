@@ -445,10 +445,52 @@ func handleTx(request []byte, bc *BlockChain) {
 	}
 }
 
+func handleVersion(request []byte, bc *BlockChain) {
+	var (
+		buff    bytes.Buffer
+		payload verzion
+	)
+
+	if _, err := buff.Write(request[commandLength:]); err != nil {
+		log.Panic(err)
+	}
+
+	decoder := gob.NewDecoder(&buff)
+
+	if err := decoder.Decode(&payload); err != nil {
+		log.Panic(err)
+	}
+
+	myBestHeight := bc.GetBestHeight()
+	foreignerBestHeight := payload.BestHeight
+
+	if myBestHeight < foreignerBestHeight {
+		sendGetBlocks(payload.AddrFrom)
+
+	} else if myBestHeight > foreignerBestHeight {
+		sendVersion(payload.AddrFrom, bc)
+
+	}
+
+	if !nodeIsKnown(payload.AddrFrom) {
+		knownNodes = append(knownNodes, payload.AddrFrom)
+	}
+}
+
 func requestBlocks() {
 	for _, node := range knownNodes {
 		sendGetBlocks(node)
 	}
+}
+
+func nodeIsKnown(addr string) bool {
+	for _, node := range knownNodes {
+		if node == addr {
+			return true
+		}
+	}
+
+	return false
 }
 
 func sendGetBlocks(address string) {

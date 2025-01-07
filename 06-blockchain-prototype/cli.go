@@ -18,6 +18,7 @@ func (cli *CLI) printUsage() {
 	fmt.Println("  printchain - print all the blocks of the blockchain")
 	fmt.Println("  reindexutxo - Rebuilds the UTXO set")
 	fmt.Println("  send -from FROM -to TO -amount AMOUNT - Send AMOUNT of coins from FROM address to TO")
+	fmt.Println("  startnode -miner ADDRESS - Start a node with ID specified in NODE_ID env. var. -miner enables mining")
 }
 
 func (cli *CLI) validateArgs() {
@@ -44,6 +45,7 @@ func (cli *CLI) Run() {
 	createWalletCmd := flag.NewFlagSet("createwallet", flag.ExitOnError)
 	listAddressCmd := flag.NewFlagSet("listaddresses", flag.ExitOnError)
 	reindexUTXOCmd := flag.NewFlagSet("reindexutxo", flag.ExitOnError)
+	startNodeCmd := flag.NewFlagSet("startnode", flag.ExitOnError)
 
 	createBlockchainAddress := createBlockchainCmd.String("address", "", "The address to send genesis block reward to")
 	getBalanceAddress := getBalanceCmd.String("address", "", "The address to get balance for")
@@ -51,6 +53,7 @@ func (cli *CLI) Run() {
 	sendTo := sendCmd.String("to", "", "Destination wallet address")
 	sendAmount := sendCmd.Int("amount", 0, "Amount to send")
 	sendMine := sendCmd.Bool("mine", false, "Mine immediately on the same node")
+	startNodeMiner := startNodeCmd.String("miner", "", "Enable mining mode and send reward to ADDRESS")
 
 	switch os.Args[1] {
 	case "createblockchain":
@@ -85,6 +88,11 @@ func (cli *CLI) Run() {
 
 	case "reindexutxo":
 		if err := reindexUTXOCmd.Parse(os.Args[2:]); err != nil {
+			log.Panic(err)
+		}
+
+	case "startnode":
+		if err := startNodeCmd.Parse(os.Args[2:]); err != nil {
 			log.Panic(err)
 		}
 
@@ -136,5 +144,14 @@ func (cli *CLI) Run() {
 
 	if listAddressCmd.Parsed() {
 		cli.Listaddresses(nodeID)
+	}
+
+	if startNodeCmd.Parsed() {
+		if len(*startNodeMiner) == 0 {
+			startNodeCmd.Usage()
+			os.Exit(1)
+		}
+
+		cli.StartNode(nodeID, *startNodeMiner)
 	}
 }

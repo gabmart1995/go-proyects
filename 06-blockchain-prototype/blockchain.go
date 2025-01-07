@@ -22,7 +22,10 @@ type BlockChain struct {
 }
 
 func (bc *BlockChain) MineBlock(transactions []*Transaction) *Block {
-	var lastHash []byte
+	var (
+		lastHash   []byte
+		lastHeight int
+	)
 
 	for _, tx := range transactions {
 		if !bc.VerifyTransaction(tx) {
@@ -36,6 +39,11 @@ func (bc *BlockChain) MineBlock(transactions []*Transaction) *Block {
 
 		lastHash = b.Get([]byte("l"))
 
+		blockData := b.Get(lastHash)
+		block := DeserializeBlock(blockData)
+
+		lastHeight = block.Height
+
 		return nil
 	})
 
@@ -43,7 +51,7 @@ func (bc *BlockChain) MineBlock(transactions []*Transaction) *Block {
 		log.Fatal(err)
 	}
 
-	newBlock := NewBlock(transactions, lastHash)
+	newBlock := NewBlock(transactions, lastHash, (lastHeight + 1))
 
 	// se ultiliza el ultimo hash para crear el nuevo bloque
 	err = bc.db.Update(func(tx *bolt.Tx) error {
