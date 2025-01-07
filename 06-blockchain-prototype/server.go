@@ -51,6 +51,11 @@ type getdata struct {
 	ID       []byte
 }
 
+type tx struct {
+	AddFrom     string
+	Transaction []byte
+}
+
 func StartServer(nodeID, minerAddress string) {
 	nodeAddress = fmt.Sprintf("localhost:%s", nodeID)
 	miningAddress = minerAddress
@@ -58,11 +63,12 @@ func StartServer(nodeID, minerAddress string) {
 	// abrimos el puerto usando el prtocolo http
 	// cada nodo especifica un puerto
 	ln, err := net.Listen(protocol, nodeAddress)
-	defer ln.Close()
 
 	if err != nil {
 		log.Panic(err)
 	}
+
+	defer ln.Close()
 
 	bc := NewBlockChain(nodeID)
 
@@ -115,7 +121,7 @@ func bytesToCommand(bytes []byte) string {
 		}
 	}
 
-	return fmt.Sprintf("%s", command)
+	return string(command)
 }
 
 // tranforma la informacion recibida por tcp
@@ -134,7 +140,6 @@ func gobEncode(data interface{}) []byte {
 // abre la conexion y manda los datos
 func sendData(addr string, data []byte) {
 	conn, err := net.Dial(protocol, addr)
-	defer conn.Close()
 
 	if err != nil {
 		fmt.Printf("%s is not available\n", addr)
@@ -160,6 +165,8 @@ func sendData(addr string, data []byte) {
 	if err != nil {
 		log.Panic(err)
 	}
+
+	defer conn.Close()
 }
 
 // controlador de peticiones tcp
@@ -259,8 +266,23 @@ func sendGetBlocks(address string) {
 }
 
 func sendGetData(address, kind string, id []byte) {
-	payload := gobEncode(getdata{nodeAddress, kind, id})
+	payload := gobEncode(getdata{
+		AddrFrom: nodeAddress,
+		Type:     kind,
+		ID:       id,
+	})
 	request := append(commandToBytes("getdata"), payload...)
 
 	sendData(address, request)
+}
+
+func sendTx(addr string, tnx *Transaction) {
+	data := tx{
+		AddFrom:     nodeAddress,
+		Transaction: tnx.Serialize(),
+	}
+	payload := gobEncode(data)
+	request := append(commandToBytes("tx"), payload...)
+
+	sendData(addr, request)
 }

@@ -30,6 +30,13 @@ func (cli *CLI) validateArgs() {
 func (cli *CLI) Run() {
 	cli.validateArgs()
 
+	// obtiene el ID de las variables de entorno de la terminal
+	nodeID := os.Getenv("NODE_ID")
+	if nodeID == "" {
+		fmt.Printf("NODE_ID env. var is not set!")
+		os.Exit(1)
+	}
+
 	createBlockchainCmd := flag.NewFlagSet("createblockchain", flag.ExitOnError)
 	printChainCmd := flag.NewFlagSet("printchain", flag.ExitOnError)
 	getBalanceCmd := flag.NewFlagSet("getbalance", flag.ExitOnError)
@@ -43,6 +50,7 @@ func (cli *CLI) Run() {
 	sendFrom := sendCmd.String("from", "", "Source wallet address")
 	sendTo := sendCmd.String("to", "", "Destination wallet address")
 	sendAmount := sendCmd.Int("amount", 0, "Amount to send")
+	sendMine := sendCmd.Bool("mine", false, "Mine immediately on the same node")
 
 	switch os.Args[1] {
 	case "createblockchain":
@@ -91,11 +99,11 @@ func (cli *CLI) Run() {
 			os.Exit(1)
 		}
 
-		cli.createBlockchain(*createBlockchainAddress)
+		cli.createBlockchain(*createBlockchainAddress, nodeID)
 	}
 
 	if printChainCmd.Parsed() {
-		cli.printChain()
+		cli.printChain(nodeID)
 	}
 
 	if getBalanceCmd.Parsed() {
@@ -104,7 +112,7 @@ func (cli *CLI) Run() {
 			os.Exit(1)
 		}
 
-		cli.getBalance(*getBalanceAddress)
+		cli.getBalance(*getBalanceAddress, nodeID)
 	}
 
 	if sendCmd.Parsed() {
@@ -115,18 +123,18 @@ func (cli *CLI) Run() {
 			os.Exit(1)
 		}
 
-		cli.send(*sendFrom, *sendTo, *sendAmount)
+		cli.send(*sendFrom, *sendTo, *sendAmount, nodeID, *sendMine)
 	}
 
 	if createWalletCmd.Parsed() {
-		cli.CreateWallet()
+		cli.CreateWallet(nodeID)
 	}
 
 	if reindexUTXOCmd.Parsed() {
-		cli.ReindexUTXO()
+		cli.ReindexUTXO(nodeID)
 	}
 
 	if listAddressCmd.Parsed() {
-		cli.Listaddresses()
+		cli.Listaddresses(nodeID)
 	}
 }

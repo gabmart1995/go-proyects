@@ -2,8 +2,8 @@ package main
 
 import "fmt"
 
-func (cli *CLI) CreateWallet() {
-	wallets, _ := NewWallets()
+func (cli *CLI) CreateWallet(nodeID string) {
+	wallets, _ := NewWallets(nodeID)
 	address := wallets.CreateWallet()
 
 	wallets.SaveToFile()

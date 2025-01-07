@@ -85,18 +85,10 @@ func (tx Transaction) IsCoinbase() bool {
 }
 
 // crea una nueva transaction
-func NewUTXOTransaction(from, to string, amount int, UTXOSet *UTXOSet) *Transaction {
+func NewUTXOTransaction(wallet *Wallet, to string, amount int, UTXOSet *UTXOSet) *Transaction {
 	var inputs []TXInput
 	var outputs []TXOutput
 
-	// generamos los wallets
-	wallets, err := NewWallets()
-
-	if err != nil {
-		log.Panic(err)
-	}
-
-	wallet := wallets.GetWallet(from)
 	pubKeyHash := HashPubKey(wallet.PublicKey)
 	acc, validOutputs := UTXOSet.FindSpendableOutputs(pubKeyHash, amount)
 
@@ -126,7 +118,9 @@ func NewUTXOTransaction(from, to string, amount int, UTXOSet *UTXOSet) *Transact
 	}
 
 	// construimos las salidas
+	from := string(wallet.GetAddress())
 	outputs = append(outputs, *NewTXOuput(amount, to))
+
 	if acc > amount {
 		outputs = append(outputs, *NewTXOuput(acc-amount, from))
 	}
