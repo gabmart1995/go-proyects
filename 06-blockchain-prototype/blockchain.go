@@ -12,7 +12,7 @@ import (
 	"github.com/boltdb/bolt"
 )
 
-const dbFile = "blockchain.db"
+const dbFile = "blockchain_%s.db"
 const blocksBucket = "blocks"
 const genesisCoinbaseData = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks"
 
@@ -69,8 +69,10 @@ func (bc *BlockChain) MineBlock(transactions []*Transaction) *Block {
 	return newBlock
 }
 
-func NewBlockChain() *BlockChain {
-	if !dbExists() {
+func NewBlockChain(nodeID string) *BlockChain {
+	dbFile := fmt.Sprintf(dbFile, nodeID)
+
+	if !dbExists(dbFile) {
 		fmt.Println("No existing blockchain found. Create one first")
 		os.Exit(1)
 	}
@@ -99,8 +101,10 @@ func NewBlockChain() *BlockChain {
 	return &bc
 }
 
-func CreateBlockchain(address string) *BlockChain {
-	if dbExists() {
+func CreateBlockchain(address, nodeID string) *BlockChain {
+	dbFile := fmt.Sprintf(dbFile, nodeID)
+
+	if dbExists(dbFile) {
 		fmt.Println("Blockchain alredy exists")
 		os.Exit(1)
 	}
@@ -153,7 +157,7 @@ func (bc *BlockChain) Iterator() *BlockChainIterator {
 	return bci
 }
 
-func dbExists() bool {
+func dbExists(dbFile string) bool {
 	if _, err := os.Stat(dbFile); os.IsNotExist(err) {
 		return false
 	}
@@ -263,4 +267,61 @@ func (bc *BlockChain) VerifyTransaction(tx *Transaction) bool {
 	}
 
 	return tx.Verify(prevTXs)
+}
+
+// retorna la altura del ultimo bloque
+func (bc *BlockChain) GetBestHeight() int {
+	var lastBlock Block
+
+	err := bc.db.View(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket([]byte(blocksBucket))
+		lastHash := bucket.Get([]byte("l"))
+		blockData := bucket.Get(lastHash)
+
+		lastBlock = *DeserializeBlock(blockData)
+
+		return nil
+	})
+
+	if err != nil {
+		log.Panic(err)
+	}
+
+	return lastBlock.Height
+}
+
+func (bc *BlockChain) AddBlock(block *Block) {
+	err := bc.db.Update(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket([]byte(blocksBucket))
+		blockInDb := bucket.Get(block.Hash)
+
+		if blockInDb != nil {
+			return nil
+		}
+
+		// en caso de no estar se serializa nuevamente
+		blockData := block.Serialize()
+
+		if err := bucket.Put(block.Hash, blockData); err != nil {
+			log.Panic(err)
+		}
+
+		lastHash := bucket.Get([]byte("l"))
+		lastBlockData := bucket.Get(lastHash)
+		lastBlock := DeserializeBlock(lastBlockData)
+
+		if block.Height > lastBlock.Height {
+			if err := bucket.Put([]byte("l"), block.Hash); err != nil {
+				log.Panic(err)
+			}
+
+			bc.tip = block.Hash
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		log.Panic(err)
+	}
 }
