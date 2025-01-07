@@ -161,56 +161,6 @@ func dbExists() bool {
 	return true
 }
 
-// retorna la lista de transacciones que contenga las salidas no gastadas
-func (bc *BlockChain) FindUnspentTransactions(pubKeyHash []byte) []Transaction {
-	var unspentTXs []Transaction
-	spentTXOs := make(map[string][]int)
-
-	bci := bc.Iterator()
-
-	for {
-		block := bci.Next()
-
-		for _, tx := range block.Transactions {
-			txID := hex.EncodeToString(tx.ID)
-
-		Outputs:
-			for outIdx, out := range tx.Vout {
-
-				// verificamos si la salida fue gastada
-				if spentTXOs[txID] != nil {
-					for _, spentOut := range spentTXOs[txID] {
-						if spentOut == outIdx {
-							continue Outputs
-						}
-					}
-				}
-
-				// verificamos si la transaccion puede ser desbloqueada
-				if out.IsLockedWithKey(pubKeyHash) {
-					unspentTXs = append(unspentTXs, *tx)
-				}
-			}
-
-			// verifica si ya transaccion fue gastada y lo coloca en el mapa
-			if !tx.IsCoinbase() {
-				for _, in := range tx.Vin {
-					if in.UsesKey(pubKeyHash) {
-						inTxID := hex.EncodeToString(in.Txid)
-						spentTXOs[inTxID] = append(spentTXOs[inTxID], in.Vout)
-					}
-				}
-			}
-		}
-
-		if len(block.PrevBlockHash) == 0 {
-			break
-		}
-	}
-
-	return unspentTXs
-}
-
 // retorna todas las salidas de transacciones que no fueron gastadas
 func (bc *BlockChain) FindUTXO() map[string]TXOutputs {
 	UTXO := make(map[string]TXOutputs)
@@ -311,9 +261,6 @@ func (bc *BlockChain) VerifyTransaction(tx *Transaction) bool {
 
 		prevTXs[hex.EncodeToString(prevTX.ID)] = prevTX
 	}
-
-	// fmt.Println(prevTXs)
-	// fmt.Printf("result: %t\n", tx.Verify(prevTXs))
 
 	return tx.Verify(prevTXs)
 }
