@@ -156,20 +156,22 @@ func (tx *Transaction) Sign(privKey ecdsa.PrivateKey, prevTXs map[string]Transac
 	// establecemos los campos de la firma
 	for inID, vin := range txCopy.Vin {
 		prevTX := prevTXs[hex.EncodeToString(vin.Txid)]
-
 		txCopy.Vin[inID].Signature = nil
 		txCopy.Vin[inID].PubKey = prevTX.Vout[vin.Vout].PubKeyHash
-		txCopy.ID = txCopy.Hash()
-		txCopy.Vin[inID].PubKey = nil
 
-		// establecemos la firma
-		r, s, err := ecdsa.Sign(rand.Reader, &privKey, txCopy.ID)
+		dataToSign := fmt.Sprintf("%x\n", txCopy)
 
+		r, s, err := ecdsa.Sign(rand.Reader, &privKey, []byte(dataToSign))
 		if err != nil {
 			log.Panic(err)
 		}
 
+		// establecemos la firma
 		tx.Vin[inID].Signature = append(r.Bytes(), s.Bytes()...)
+		txCopy.Vin[inID].PubKey = nil
+
+		// txCopy.ID = txCopy.Hash()
+
 	}
 }
 
@@ -226,10 +228,14 @@ func (tx *Transaction) Verify(prevTXs map[string]Transaction) bool {
 		x.SetBytes(vin.PubKey[:(keyLen / 2)])
 		y.SetBytes(vin.PubKey[(keyLen / 2):])
 
+		dataToVerify := fmt.Sprintf("%x\n", txCopy)
+
 		rawPubKey := ecdsa.PublicKey{Curve: curve, X: &x, Y: &y}
-		if !ecdsa.Verify(&rawPubKey, txCopy.ID, &r, &s) {
+		if !ecdsa.Verify(&rawPubKey, []byte(dataToVerify), &r, &s) {
 			return false
 		}
+
+		txCopy.Vin[inID].PubKey = nil
 	}
 
 	return true

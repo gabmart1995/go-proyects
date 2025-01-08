@@ -81,6 +81,8 @@ func StartServer(nodeID, minerAddress string) {
 	bc := NewBlockChain(nodeID)
 
 	if nodeAddress != knownNodes[0] {
+		// se manda peticion al nodo raiz para actualizar la
+		// version
 		sendVersion(knownNodes[0], bc)
 	}
 
@@ -106,6 +108,8 @@ func sendVersion(addr string, bc *BlockChain) {
 
 	request := append(commandToBytes("version"), payload...)
 
+	// fmt.Println(string(commandToBytes("version")))
+
 	sendData(addr, request)
 }
 
@@ -124,7 +128,7 @@ func bytesToCommand(bytes []byte) string {
 	var command []byte
 
 	for _, b := range bytes {
-		if b == 0x0 {
+		if b != 0x0 {
 			command = append(command, b)
 		}
 	}
@@ -167,6 +171,8 @@ func sendData(addr string, data []byte) {
 		return
 	}
 
+	defer conn.Close()
+
 	// copiamos los bytes al resto de la red
 	_, err = io.Copy(conn, bytes.NewReader(data))
 
@@ -174,7 +180,6 @@ func sendData(addr string, data []byte) {
 		log.Panic(err)
 	}
 
-	defer conn.Close()
 }
 
 // controlador de peticiones tcp
@@ -456,7 +461,6 @@ func handleVersion(request []byte, bc *BlockChain) {
 	}
 
 	decoder := gob.NewDecoder(&buff)
-
 	if err := decoder.Decode(&payload); err != nil {
 		log.Panic(err)
 	}

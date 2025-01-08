@@ -65,7 +65,7 @@ func (ws *Wallets) CreateWallet() string {
 	return address
 }
 
-func (ws Wallets) SaveToFile() {
+func (ws Wallets) SaveToFile(nodeID string) {
 	var content bytes.Buffer
 	encoder := gob.NewEncoder(&content)
 	err := encoder.Encode(ws)
@@ -74,6 +74,7 @@ func (ws Wallets) SaveToFile() {
 		log.Panic(err)
 	}
 
+	walletFile := fmt.Sprintf(walletFile, nodeID)
 	err = os.WriteFile(walletFile, content.Bytes(), 0644)
 
 	if err != nil {
