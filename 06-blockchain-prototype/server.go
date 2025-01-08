@@ -252,10 +252,15 @@ func handleBlock(request []byte, bc *BlockChain) {
 		payload block
 	)
 
-	_, err := buff.Write(request[:commandLength])
+	_, err := buff.Write(request[commandLength:])
 
 	if err != nil {
 		log.Panic(err)
+	}
+
+	decoder := gob.NewDecoder(&buff)
+	if err := decoder.Decode(&payload); err != nil {
+		log.Fatal(err)
 	}
 
 	blockData := payload.Block
@@ -467,6 +472,8 @@ func handleVersion(request []byte, bc *BlockChain) {
 
 	myBestHeight := bc.GetBestHeight()
 	foreignerBestHeight := payload.BestHeight
+
+	// fmt.Printf("%d best height\n%d payload height", myBestHeight, foreignerBestHeight)
 
 	if myBestHeight < foreignerBestHeight {
 		sendGetBlocks(payload.AddrFrom)
