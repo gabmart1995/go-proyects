@@ -1,0 +1,71 @@
+<h1>Detalle del pedido</h1>
+{{if .Order}}
+    {{if isAdmin .UserRol}} <!-- opcion de admin cambiar estado pedido -->
+        <h3>Cambiar estado del pedido</h3>
+        <form action="/order_controller/state" method="post">
+            <input type="hidden" name="id" value="{{.Order.Id}}" />
+            <select name="estado" id="">
+                <option value="confirm" {{if eq .Order.Estado "confirm"}}selected{{end}}>
+                    Pendiente
+                </option>
+                <option value="preparation" {{if eq .Order.Estado "preparation"}}selected{{end}}>
+                    En preparación
+                </option>
+                <option value="ready" {{if eq .Order.Estado "ready"}}selected{{end}}>
+                    Preparado para enviar
+                </option>
+                <option value="sended" {{if eq .Order.Estado "sended"}}selected{{end}}>
+                    Enviado
+                </option>
+            </select>
+
+            <input type="submit" value="Cambiar estado" class="button" />
+        </form>
+        <br />
+    {{end}}
+
+    <h3>Detalles del envio</h3>
+    <p style="margin: 20px 0;">
+        Provincia: <b>{{.Order.Provincia}}</b> <br />
+        Localidad: <b>{{.Order.Localidad}}</b> <br />
+        Direccion: <b>{{.Order.Direccion}}</b> <br /> <br />
+    </p>
+
+    <h3>Datos del pedido </h3>
+    <p style="margin: 20px 0;">
+        Estado: <b>{{getStatus .Order.Estado}}</b> <br />
+        Número de pedido: <b>{{.Order.Id}}</b> <br />
+        Total a pagar: <b>{{.Order.Coste}}$</b> <br /><br />
+    </p>
+    <h3>Productos:</h3><br>
+    <table>
+        <thead>
+            <tr>
+                <th>Imagen</th>
+                <th>Nombre</th>
+                <th>Precio</th>
+                <th>Unidades</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range .Order.Cart}}
+                <tr>
+                    <td>
+                        {{if .Product.Imagen}}
+                            <img class="img_carrito" src="uploads/images/{{.Product.Imagen}}" alt="{{.Product.Imagen}}" />
+                        {{else}}
+                            <img class="img_carrito" src="img/camiseta.png" alt="camiseta.png" />
+                        {{end}}
+                    </td>
+                    <td>
+                        <a href="product_controller/show/{{.Product.Id}}">{{.Product.Nombre}}</a>
+                    </td>
+                    <td>{{.Product.Precio}}$</td>
+                    <td>{{.Unidades}}</td>
+                </tr>
+            {{end}}
+        </tbody>
+    </table>
+{{else}}
+    <h3 style="text-align: center;" class="alert-red">El pedido que buscas no existe</h3>
+{{end}}

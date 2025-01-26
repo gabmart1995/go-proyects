@@ -1,0 +1,39 @@
+<h1>Registrarse</h1>
+
+<!-- mensaje exito de la base de datos -->
+{{if .DbSuccess}}
+    <strong class="alert_green">{{.DbSuccess}}</strong>
+{{end}}
+
+<!-- en caso de tener un error en base de datos -->
+{{if .DbError}}
+    <strong class="alert_red">{{.DbError}}</strong>
+{{end}}
+
+<form action="user_controller/save" method="POST">
+    <label for="name">Nombre</label>
+    <input type="text" name="name"  />
+    {{if .RegisterNombre}} <!-- errores validacion -->
+        <small class="text-danger">{{.RegisterNombre}}</small>
+    {{end}}
+
+    <label for="surname">Apellidos</label>
+    <input type="text" name="surname"  />
+    {{if .RegisterApellidos}}
+        <small class="text-danger">{{.RegisterApellidos}}</small>
+    {{end}}
+
+    <label for="email">Email</label>
+    <input type="email" name="email"  />
+    {{if .RegisterEmail}}
+        <small class="text-danger">{{.RegisterEmail}}</small>
+    {{end}}
+
+    <label for="password">Contrasena</label>
+    <input type="password" name="password"  />
+    {{if .RegisterPassword}}
+        <small class="text-danger">{{.RegisterPassword}}</small>
+    {{end}}
+
+    <input type="submit" value="registrarse" />
+</form>

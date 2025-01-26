@@ -1,0 +1,22 @@
+<div>
+    <h1>{{.Title}}</h1>
+    <p style="font-size: 16px;">{{.Message}}</p>
+    <h3>Productos</h3>
+    <table style="width: 100%;">
+        <thead>
+            <th style="padding: 5px; text-align: left;">Nombre:</th>
+            <th style="padding: 5px; text-align: left;">Precio:</th>
+            <th style="padding: 5px; text-align: left;">Unidades:</th>
+        </thead>
+        <tbody>
+            {{range .Order.Cart}}
+                <tr>
+                    <td style="padding: 5px; text-align: left;">{{.Product.Nombre}}</td>
+                    <td style="padding: 5px; text-align: left;">{{.Product.Precio}}</td>
+                    <td style="padding: 5px; text-align: left;">{{.Unidades}}</td>
+                </tr>
+            {{end}}
+        </tbody>
+    </table>
+</div>
+

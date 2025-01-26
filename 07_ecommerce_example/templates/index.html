@@ -1,0 +1,7 @@
+    <h1>Algunos de nuestros productos</h1>
+    {{range .Products}}
+        {{template "templates/partials/product" .}}
+    {{else}}
+        <p class="alert_red">No hay productos que mostrar</p>
+    {{end}}
+</div>
