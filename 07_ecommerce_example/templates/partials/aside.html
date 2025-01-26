@@ -1,0 +1,68 @@
+        <!-- barra lateral -->
+        <aside id="lateral">
+            <div id="carrito" class="block_aside">
+                <h3>Mi carrito</h3>
+                <ul>
+                    <li>
+                        <!-- cantidad de articulos -->
+                        Productos ({{countCart .Cart}})
+                    </li>
+                    <li>
+                        <!-- total del carrito -->
+                        Total: {{getTotalCart .Cart}}$
+                    </li>
+                    <li>
+                        <a href="cart_controller/">Ver el carrito</a>
+                    </li>
+                </ul>
+            </div>
+
+            <div id="login" class="block_aside">
+                {{if .IsLogged}} <!-- usuario autenticado -->
+                    <h3>{{.UserName}} {{.UserSurname}}</h3>
+                {{else}}
+                    <h3>Entrar a la web</h3>
+                    <form action="/user_controller/login" method="POST">
+                        <label for="email">Email</label>
+                        <input type="email" name="email" id="email" />
+                        {{if .LoginEmail}}
+                            <small class="text-danger">{{.LoginEmail}}</small>
+                        {{end}}
+
+                        <label for="password">Password</label>
+                        <input type="password" name="password" id="password" />
+                        {{if .LoginPassword}}
+                            <small class="text-danger">{{.LoginPassword}}</small>
+                        {{end}}
+
+                        <input type="submit" value="Enviar" />
+                    </form>
+                {{end}}
+                <ul>
+                    {{if .IsLogged}} <!-- usuario autenticado -->
+                        <li>
+                            <a href="/order_controller/my-orders">Mis pedidos</a>
+                        </li>
+                        {{if isAdmin .UserRol}}<!-- opciones de admin -->
+                            <li>
+                                <a href="/category_controller/">Gestionar categorias</a>
+                            </li>
+                            <li>
+                                <a href="/product_controller/manage">Gestionar productos</a>
+                            </li>
+                            <li>
+                                <a href="/order_controller/manage">Gestionar pedidos</a>
+                            </li>
+                        {{end}}
+                        <li>
+                            <a href="/user_controller/logout">Cerrar sesion</a>
+                        </li>
+                    {{else}}
+                        <li>
+                            <a href="/user_controller/register">Registrate aqui</a>
+                        </li>
+                    {{end}}
+                </ul>
+            </div>
+        </aside>
+        <div id="central">

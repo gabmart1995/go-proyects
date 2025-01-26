@@ -1,0 +1,32 @@
+{{if .Manage}}
+    <h1>Gestionar pedidos</h1>
+{{else}}
+    <h1>Mis pedidos</h1>
+{{end}}
+
+<table>
+    <thead>
+        <tr>
+            <th>N° Pedido</th>
+            <th>Coste</th>
+            <th>Fecha</th>
+            <th>Estado</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{range .Orders}}
+            <tr>
+                <td><a href="order_controller/view/{{.Id}}">{{.Id}}</a></td>
+                <td>{{.Coste}}$</td>
+                <td>{{.Fecha}}</td>
+                <td>{{getStatus .Estado}}</td>
+            </tr>
+        {{else}}
+            <tr>
+                <td colspan="3">
+                    <p class="alert_red">No hay ordenes que mostrar</p>
+                </td>
+            </tr>
+        {{end}}
+    </tbody>
+</table>

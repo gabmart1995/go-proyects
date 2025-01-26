@@ -1,0 +1,21 @@
+    <div id="container"> <!-- container -->
+        <!-- cabecera -->
+        <header id="header">
+            <div id="logo">
+                <img src="img/camiseta.png" alt="camiseta-logo" />
+                <a href="/">Tienda de camisetas</a>
+            </div>
+        </header>
+        <!-- menu -->
+        <nav id="menu">
+            <ul>
+                <li><a href="/">Inicio</a></li>
+                {{range getCategories}}
+                    <li><a href="category_controller/show/{{.Id}}">{{.Nombre}}</a></li>
+                {{end}}
+            </ul>
+        </nav>
+        <div id="content">
+            {{template "templates/partials/aside" .}}
+    
+        

@@ -1,0 +1,48 @@
+{{if .OrderConfirm}}
+    <h1>Tu pedido se ha confirmado</h1>
+    <p>
+        Tu pedido ha sido guardado con éxito, una vez que realices la
+        transferencia bancaria a la cuenta XXXX con el coste del pedido, luego 
+        será procesado y enviado.
+    </p>
+    <br />
+    
+    {{if .Order}}
+        <h3>Datos del pedido </h3>
+        <p style="margin: 20px 0;">
+            Número de pedido: <b>{{.Order.Id}}</b> <br />
+            Total a pagar: <b>{{.Order.Coste}}$</b> <br /><br />
+        </p>
+        <h3>Productos:</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Imagen</th>
+                    <th>Nombre</th>
+                    <th>Precio</th>
+                    <th>Unidades</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .Order.Cart}}
+                    <tr>
+                        <td>
+                            {{if .Product.Imagen}}
+                                <img class="img_carrito" src="uploads/images/{{.Product.Imagen}}" alt="{{.Product.Imagen}}" />
+                            {{else}}
+                                <img class="img_carrito" src="img/camiseta.png" alt="camiseta.png" />
+                            {{end}}
+                        </td>
+                        <td>
+                            <a href="product_controller/show/{{.Product.Id}}">{{.Product.Nombre}}</a>
+                        </td>
+                        <td>{{.Product.Precio}}$</td>
+                        <td>{{.Unidades}}</td>
+                    </tr>
+                {{end}}
+            </tbody>
+        </table>
+    {{end}}
+{{else}}
+    <h1>Tu pedido no se ha podido procesar</h1>
+{{end}}

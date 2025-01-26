@@ -1,0 +1,39 @@
+<h1>Crear pedido</h1>
+<p style="margin-bottom: 15px;">
+    <a href="cart_controller/">Ver los productos y el estado del pedido</a><br />
+</p>
+
+<h3>Domicilio para el envio</h3>
+<form action="/order_controller/save" method="post">
+    <label for="provincia">Provincia</label>
+    <input 
+        type="text" 
+        name="provincia" 
+        id="provincia" 
+    />
+    {{if .OrderProvincia}}
+        <small class="alert_red">{{.OrderProvincia}}</small>
+    {{end}}
+
+    <label for="localidad">localidad</label>
+    <input 
+        type="text" 
+        name="localidad" 
+        id="localidad" 
+    />
+    {{if .OrderLocalidad}}
+        <small class="alert_red">{{.OrderLocalidad}}</small>
+    {{end}}
+
+    <label for="direccion">Direccion</label>
+    <input 
+        type="text" 
+        name="direccion" 
+        id="direccion" 
+    />
+    {{if .OrderDireccion}}
+        <small class="alert_red">{{.OrderDireccion}}</small>
+    {{end}}
+
+    <input type="submit" value="confirmar pedido">
+</form>

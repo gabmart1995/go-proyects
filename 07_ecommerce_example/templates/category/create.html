@@ -1,0 +1,10 @@
+<h1>Crear categoria</h1>
+<form action="/category_controller/save" method="POST">
+    <label for="name">Nombre:</label>
+    <input type="text" name="name" />
+    {{if .CategoryCreateNombre}}
+        <small class="text-danger">{{.CategoryCreateNombre}}</small>
+    {{end}}
+
+    <input type="submit" value="Guardar" />
+</form>

@@ -1,0 +1,14 @@
+{{if .Category}}
+    <h1>{{.Category.Nombre}}</h1>
+
+    {{range .Products}}
+        {{template "templates/partials/product" .}}
+    {{else}}
+        <p style="text-align: center;" class="alert_red">No hay productos que mostrar</p>
+    {{end}}
+
+{{else}}
+    <h1>La categoria no existe</h1>
+{{end}}
+
+

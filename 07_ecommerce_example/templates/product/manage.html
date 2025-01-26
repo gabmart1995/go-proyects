@@ -1,0 +1,43 @@
+<h1>Gestion de productos</h1>
+
+<a href="/product_controller/create" class="button button-small">
+    Crear producto
+</a>
+
+{{if .DbSuccess}}
+    <p style="margin-bottom: 10px;">
+        <b class="alert_green">{{.DbSuccess}}</b>
+    </p>
+{{end}}
+
+<table>
+    <thead>
+        <tr>
+            <th>Id:</th>
+            <th>Nombre:</th>
+            <th>Precio:</th>
+            <th>Stock:</th>
+            <th>Acciones:</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{range .Products}}
+            <tr>
+                <td>{{.Id}}</td>
+                <td>{{.Nombre}}</td>
+                <td>{{.Precio}}</td>
+                <td>{{.Stock}}</td>
+                <td>
+                    <a href="/product_controller/edit/{{.Id}}" class="button button-gestion">Editar</a>
+                    <a href="/product_controller/delete/{{.Id}}" class="button button-gestion button-red">Eliminar</a>
+                </td>
+            </tr>
+        {{else}}
+            <tr>
+                <td colspan="5">
+                    <h3 class="alert_red">No existen productos que mostrar</h3>
+                </td>
+            </tr>
+        {{end}}
+    </tbody>    
+</table>

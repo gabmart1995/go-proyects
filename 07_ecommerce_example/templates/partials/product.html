@@ -1,0 +1,12 @@
+<div class="product">
+    <a href="product_controller/show/{{.Id}}">
+        {{if .Imagen}}
+            <img src="uploads/images/{{.Imagen}}" alt="{{.Imagen}}" />
+        {{else}}
+            <img src="img/camiseta.png" alt="camiseta" />
+        {{end}}
+        <h2>{{.Nombre}}</h2>
+    </a>
+    <p>{{.Precio}}$</p>
+    <a href="cart_controller/add/{{.Id}}" class="button">Comprar</a>
+</div>

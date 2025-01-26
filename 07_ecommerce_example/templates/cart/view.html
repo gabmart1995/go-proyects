@@ -1,0 +1,62 @@
+<h1>Carrito de compra</h1>
+
+{{if and .CartNotEmpty .Cart}}
+    <table>
+        <thead>
+            <tr>
+                <th>Imagen</th>
+                <th>Nombre</th>
+                <th>Precio</th>
+                <th>Unidades</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{range $index, $value := .Cart}}
+                <tr>
+                    <td>
+                        {{if $value.Product.Imagen}}
+                            <img class="img_carrito" src="uploads/images/{{$value.Product.Imagen}}" alt="{{$value.Product.Imagen}}" />
+                        {{else}}
+                            <img class="img_carrito" src="img/camiseta.png" alt="camiseta.png" />
+                        {{end}}
+                    </td>
+                    <td>
+                        <a href="product_controller/show/{{$value.Product.Id}}">{{$value.Product.Nombre}}</a>
+                    </td>
+                    <td>{{$value.Product.Precio}}$</td>
+                    <td>
+                        {{$value.Unidades}}
+                        <div class="updown-unidades">
+                            <a class="button" href="cart_controller/down/{{$index}}">-</a>
+                            <a class="button" href="cart_controller/up/{{$index}}">+</a>
+                        </div>
+                    </td>
+                    <td>
+                        <a href="cart_controller/remove/{{$index}}" class="button button-carrito button-red">Retirar producto</a>
+                    </td>
+                </tr>
+            {{else}}
+                <tr>
+                    <td colspan="5">
+                        <p class="alert_red">No hay productos en el carrito</p>
+                    </td>
+                </tr>
+            {{end}}
+        </tbody>
+    </table>
+    <br />
+    <div class="delete-carrito">
+        <a href="cart_controller/delete_all" class="button button-delete button-red">Vaciar carrito</a>
+    </div>
+    <div class="total-carrito">
+        <h3>Precio total: {{getTotalCart .Cart}} $</h3>
+        
+        {{if and .CartNotEmpty .IsLogged}} <!-- mostramos el boton solo si esta autenticado -->
+            <a href="order_controller/create" class="button button-pedido">Hacer pedido</a>
+        {{end}}
+    </div>
+{{else}}
+    <p>El carrito esta vacio. Añade algún producto</p>
+{{end}}
+

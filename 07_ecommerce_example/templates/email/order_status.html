@@ -1,0 +1,15 @@
+<h1>{{.Title}}</h1>
+
+{{if eq .Order.Estado "sended"}}
+    <p>
+        El pedido número {{.Order.Id}} se actualizado a <b>{{call .GetStatus .Order.Estado}}</b> <br />
+        Por favor este atento para recibir la entrega.
+    </p>
+{{else}}
+    <p>
+        El pedido número {{.Order.Id}} se actualizado a <b>{{call .GetStatus .Order.Estado}}</b> <br />
+        Informaremos de cualquier inconveniente durante el proceso
+    </p>
+{{end}}
+
+<small>Gracias por elegirnos (Tienda de camisetas)</small>

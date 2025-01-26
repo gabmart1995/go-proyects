@@ -1,0 +1,19 @@
+{{if .Product}}
+    <h1>{{.Product.Nombre}}</h1>
+    <div id="detail-product">
+        <div class="image">
+            {{if .Product.Imagen}}
+                <img src="uploads/images/{{.Product.Imagen}}" alt="{{.Product.Imagen}}" />
+            {{else}}
+                <img src="img/camiseta.png" alt="camiseta" />
+            {{end}}
+        </div>
+        <div class="data">
+            <p class="description">{{.Product.Descripcion}}</p>
+            <p class="price">{{.Product.Precio}}$</p>
+            <a href="cart_controller/add/{{.Product.Id}}" class="button">Comprar</a>
+        </div>
+    </div>
+{{else}}
+    <h1>El producto no existe</h1>
+{{end}}

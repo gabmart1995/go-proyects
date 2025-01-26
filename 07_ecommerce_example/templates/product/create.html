@@ -1,0 +1,99 @@
+{{if and .Edit .Product}}
+    <h1>Editar Producto {{.Product.Nombre}}</h1>
+{{else}}
+    <h1>Crear nuevo producto</h1>
+{{end}}
+
+{{if .DbError}}
+    <small class="alert_red">{{.DbError}}</small>
+{{end}}
+
+<div class="form-container">
+    <form 
+        action="/product_controller/{{if and .Edit .Product}}update/{{.Product.Id}}{{else}}save{{end}}" 
+        method="POST" 
+        enctype="multipart/form-data"
+    >
+        <label for="nombre">Nombre</label>
+        <input 
+            type="text" 
+            name="nombre" 
+            value="{{if and .Edit .Product}}{{.Product.Nombre}}{{end}}"    
+        />
+        {{if .CreateProductNombre}}
+            <small class="alert_red">{{.CreateProductNombre}}</small>
+        {{end}}
+
+        <label for="descripcion">Descripcion</label>
+        <textarea name="descripcion" id="descripcion">{{if and .Edit .Product}}{{.Product.Descripcion}}{{end}}</textarea>
+
+        <label for="precio">Precio</label>
+        <input 
+            type="number" 
+            step="0.01" 
+            name="precio" 
+            min="0" 
+            max="9999999" 
+            value="{{if and .Edit .Product}}{{.Product.Precio}}{{end}}"    
+        />
+        {{if .CreateProductPrecio}}
+            <small class="alert_red">{{.CreateProductPrecio}}</small>
+        {{end}}
+
+        <label for="stock">Stock</label>
+        <input 
+            type="number" 
+            name="stock" 
+            min="0" 
+            max="99999999" 
+            value="{{if and .Edit .Product}}{{.Product.Stock}}{{end}}"    
+        />
+        {{if .CreateProductStock}}
+            <small class="alert_red">{{.CreateProductStock}}</small>
+        {{end}}
+
+        <label for="categoria_id">Categoria</label>
+        <select name="categoria_id" id="categoria_id">
+            <option value="">Seleccione ...</option>
+            <!-- 
+                Se crea una variable local debido a que dentro de un rango
+                el {{.}} se convierte en un registro de categorias y no 
+                podra acceder a la categoria del producto consultado
+            -->
+            {{$categoryProduct := .Product.CategoryId}} 
+            {{range .Categories}}
+                <option 
+                    value="{{.Id}}" 
+                    {{if eq $categoryProduct .Id}}selected{{end}}
+                >
+                    {{.Nombre}}
+                </option>
+            {{end}}
+        </select>
+        {{if .CreateProductCategoryId}}
+            <small class="alert_red">{{.CreateProductCategoryId}}</small>
+        {{end}}
+        
+        <!-- imagen -->
+        <p>
+            <label for="imagen">Imagen</label>
+            <!-- comprobamos si tiene imagen -->
+            {{if .Product.Imagen}}
+                <img 
+                    src="uploads/images/{{.Product.Imagen}}" 
+                    class="thumb"
+                    alt="{{.Product.Imagen}}" 
+                    loading="lazy" 
+                />
+            {{end}}
+
+            <!-- formulario -->
+            <input type="file" name="imagen" id="imagen" /> <br />
+            {{if .CreateProductFile}}
+                <small class="alert_red">{{.CreateProductFile}}</small>
+            {{end}}
+        </p>
+
+        <input type="submit" value="enviar" />
+    </form>
+</div>
