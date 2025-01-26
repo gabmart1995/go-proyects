@@ -1,4 +1,0 @@
-Hola mundo desde Archivo
-Otra linea
-desde archivo
-Nueva linea
