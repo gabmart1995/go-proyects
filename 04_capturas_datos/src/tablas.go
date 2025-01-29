@@ -1,28 +1,27 @@
 package main
 
 import (
-  "fmt"
-  "os"
-  "io/ioutil"
-  "strings"
-  "strconv"
-  "log"
-  "errors"
+	"errors"
+	"fmt"
+	"log"
+	"os"
+	"strconv"
+	"strings"
 )
 
 type Options struct {
-  Name string
-  Value int
+	Name  string
+	Value int
 }
 
 type allOptions []*Options
 
 // array de opciones
-var options = allOptions {}
+var options = allOptions{}
 
 func showHelp() {
 
-  fmt.Println(`
+	fmt.Println(`
     Bienvendo al generador de tablas de multiplicar realizado con go.
     Para generar una tabla debes inclur las siguientes opciones:
 
@@ -34,160 +33,160 @@ func showHelp() {
   `)
 }
 
-func storeOption( arg string ) ( []*Options )  {
+func storeOption(arg string) []*Options {
 
-  value, error := strconv.Atoi( strings.Split( arg, "=" )[1] )
+	value, error := strconv.Atoi(strings.Split(arg, "=")[1])
 
-  if ( error != nil ) {
-    log.SetPrefix( strings.Split( arg, "=")[0] + ": " )
-    log.Fatal( errors.New( "El Valor colocado es invalido" ) )
-  }
+	if error != nil {
+		log.SetPrefix(strings.Split(arg, "=")[0] + ": ")
+		log.Fatal(errors.New("El Valor colocado es invalido"))
+	}
 
-  // insert element in array
-  return append( options, &Options{ Name: strings.Split( arg, "=")[0], Value: value } )
+	// insert element in array
+	return append(options, &Options{Name: strings.Split(arg, "=")[0], Value: value})
 }
 
 func checkOption() {
 
-  if ( len( options ) > 2 ) {
-    log.SetPrefix( "Arg: " )
-    log.Fatal( errors.New( "Demasiados argumentos inicializados" ) )
-  }
+	if len(options) > 2 {
+		log.SetPrefix("Arg: ")
+		log.Fatal(errors.New("Demasiados argumentos inicializados"))
+	}
 
-  table := false
-  limit := false
+	table := false
+	limit := false
 
-  for _, option := range options {
+	for _, option := range options {
 
-    switch option.Name {
+		switch option.Name {
 
-      case "--table":
-        table = true
-        break
+		case "--table":
+			table = true
+			break
 
-      case "-t":
-        table = true
-        break
+		case "-t":
+			table = true
+			break
 
-      case "--limit":
-        limit = true
-        break
+		case "--limit":
+			limit = true
+			break
 
-      case "-l":
-        limit = true
-        break
+		case "-l":
+			limit = true
+			break
 
-      default:
-        break
-    }
-  }
+		default:
+			break
+		}
+	}
 
-  if table == true && limit == true {
+	if table == true && limit == true {
 
-    saveTableLimit()
+		saveTableLimit()
 
-  } else if table == true && limit == false {
+	} else if table == true && limit == false {
 
-    saveTable()
+		saveTable()
 
-  } else if table == false && limit == true  {
+	} else if table == false && limit == true {
 
-    log.SetPrefix( "Tabla: " )
-    log.Fatal( errors.New( "Ingresa la opcion tabla, campo obligatiorio" ) )
+		log.SetPrefix("Tabla: ")
+		log.Fatal(errors.New("Ingresa la opcion tabla, campo obligatiorio"))
 
-  } else if table == false && limit {
+	} else if table == false && limit {
 
-    log.SetPrefix( "Opcion: " )
-    log.Fatal( errors.New( "La opcion o opciones colocadas es invalido" ) )
+		log.SetPrefix("Opcion: ")
+		log.Fatal(errors.New("La opcion o opciones colocadas es invalido"))
 
-  }
+	}
 
 }
 
 func saveTable() {
 
-  var operation string
-  value := options[ len( options ) - 1 ].Value
+	var operation string
+	value := options[len(options)-1].Value
 
-  for index := 1;  index <= 10; index++ {
+	for index := 1; index <= 10; index++ {
 
-    operation += strconv.Itoa( value ) + " * " + strconv.Itoa( index ) +
-      " = " + strconv.Itoa( (index * value) ) + "\n"
-  }
+		operation += strconv.Itoa(value) + " * " + strconv.Itoa(index) +
+			" = " + strconv.Itoa((index * value)) + "\n"
+	}
 
-  error := ioutil.WriteFile( "tabla_" + strconv.Itoa( value ) + ".txt", []byte( operation ), 0600 )
+	err := os.WriteFile("tabla_"+strconv.Itoa(value)+".txt", []byte(operation), 0600)
 
-  if error != nil {
+	if err != nil {
 
-    log.Fatal( error )
-  }
+		log.Fatal(err)
+	}
 
-  fmt.Printf( "La tabla del %d fue generada con exito\n", value )
+	fmt.Printf("La tabla del %d fue generada con exito\n", value)
 }
 
 func saveTableLimit() {
 
-  var valueTable int
-  var valueLimit int
-  var operation string
+	var valueTable int
+	var valueLimit int
+	var operation string
 
-  for _, option := range options {
+	for _, option := range options {
 
-    if option.Name == "-t" || option.Name == "--table" {
-      
-      valueTable = option.Value
+		if option.Name == "-t" || option.Name == "--table" {
 
-    } else {
-      
-      valueLimit = option.Value
-    }
-  }
+			valueTable = option.Value
 
-  for index := 1;  index <= valueLimit; index++ {
-    
-    operation += strconv.Itoa( valueTable ) + " * " + strconv.Itoa( index ) +
-      " = " + strconv.Itoa( ( index * valueTable ) ) + "\n"
-  }
+		} else {
 
-  error := ioutil.WriteFile( "tabla_" + strconv.Itoa( valueTable ) + ".txt", []byte( operation ), 0600 )
+			valueLimit = option.Value
+		}
+	}
 
-  if error != nil {
+	for index := 1; index <= valueLimit; index++ {
 
-    log.Fatal( error )
-  }
+		operation += strconv.Itoa(valueTable) + " * " + strconv.Itoa(index) +
+			" = " + strconv.Itoa((index * valueTable)) + "\n"
+	}
 
-  fmt.Printf( "La tabla del %d fue generada con exito\n", valueTable )
+	error := os.WriteFile("tabla_"+strconv.Itoa(valueTable)+".txt", []byte(operation), 0600)
+
+	if error != nil {
+
+		log.Fatal(error)
+	}
+
+	fmt.Printf("La tabla del %d fue generada con exito\n", valueTable)
 }
 
 // ======================================================================================
 
-func main()  {
+func main() {
 
-  // se preparan los logs
-  log.SetFlags(0)
+	// se preparan los logs
+	log.SetFlags(0)
 
-  // se obtienen los argumentos usado en el ejecutable
-  args := os.Args
+	// se obtienen los argumentos usado en el ejecutable
+	args := os.Args
 
-  if ( len( args ) == 1 ) {
-    
-    showHelp()
-    return
-  }
+	if len(args) == 1 {
 
-  // elimina el primer vector que es el nombre del programa
-  args = append( args[1:] )
+		showHelp()
+		return
+	}
 
-  for _, arg := range args {
+	// elimina el primer vector que es el nombre del programa
+	args = args[1:]
 
-    if ( arg == "--help" || arg == "-h" ) {
-      
-      showHelp()
-      return
-    }
+	for _, arg := range args {
 
-    options = storeOption( arg )
-  }
+		if arg == "--help" || arg == "-h" {
 
-  checkOption()
+			showHelp()
+			return
+		}
+
+		options = storeOption(arg)
+	}
+
+	checkOption()
 }
