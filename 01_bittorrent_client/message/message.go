@@ -51,7 +51,7 @@ func FormatRequest(index, begin, length int) *Message {
 }
 
 // crea un mesaje verificacion del payload
-func FomatHave(index int) *Message {
+func FormatHave(index int) *Message {
 	payload := make([]byte, 4)
 	binary.BigEndian.PutUint32(payload, uint32(index))
 
