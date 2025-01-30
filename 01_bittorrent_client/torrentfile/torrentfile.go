@@ -1,10 +1,12 @@
 package torrentfile
 
 import (
+	"bittorrent-client/p2p"
 	"bytes"
+	"crypto/rand"
 	"crypto/sha1"
 	"fmt"
-	"io"
+	"os"
 
 	"github.com/jackpal/bencode-go"
 )
@@ -34,14 +36,21 @@ type TorrentFile struct {
 }
 
 // lee el contenido del archivo torrent
-func Open(r io.Reader) (*bencodeTorrent, error) {
-	bto := bencodeTorrent{}
+func Open(path string) (TorrentFile, error) {
+	file, err := os.Open(path)
 
-	if err := bencode.Unmarshal(r, &bto); err != nil {
-		return nil, err
+	if err != nil {
+		return TorrentFile{}, err
 	}
 
-	return &bto, nil
+	defer file.Close()
+
+	bto := bencodeTorrent{}
+	if err := bencode.Unmarshal(file, &bto); err != nil {
+		return TorrentFile{}, err
+	}
+
+	return bto.toTorrentFile()
 }
 
 // genera el hash para el bencode
@@ -101,4 +110,50 @@ func (bto *bencodeTorrent) toTorrentFile() (TorrentFile, error) {
 	}
 
 	return t, nil
+}
+
+// descarga el torrent y lo almacena en el archivo
+func (t *TorrentFile) DownloadToFile(path string) error {
+	var peerID [20]byte
+
+	if _, err := rand.Read(peerID[:]); err != nil {
+		return err
+	}
+
+	// realiza la peticion a los peers
+	peers, err := t.requestPeers(peerID, PORT)
+
+	if err != nil {
+		return nil
+	}
+
+	torrent := p2p.Torrent{
+		Peers:       peers,
+		PeerID:      peerID,
+		InfoHash:    t.InfoHash,
+		PieceHashes: t.PieceHashes,
+		PieceLength: t.PieceLength,
+		Length:      t.Length,
+		Name:        t.Name,
+	}
+
+	buf, err := torrent.Download()
+
+	if err != nil {
+		return err
+	}
+
+	outFile, err := os.Create(path)
+
+	if err != nil {
+		return err
+	}
+
+	defer outFile.Close()
+
+	if _, err := outFile.Write(buf); err != nil {
+		return err
+	}
+
+	return nil
 }
