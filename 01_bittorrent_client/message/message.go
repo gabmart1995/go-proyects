@@ -3,6 +3,7 @@ package message
 import (
 	"encoding/binary"
 	"fmt"
+	"io"
 )
 
 type messageID uint8
@@ -113,4 +114,91 @@ func ParseHave(msg *Message) (int, error) {
 	index := int(binary.BigEndian.Uint32(msg.Payload))
 
 	return index, nil
+}
+
+// serializa el mensaje hacia el buffer
+// <length prefix><message ID><payload>
+func (m *Message) Serialize() []byte {
+	if m == nil {
+		return make([]byte, 4)
+	}
+
+	length := uint32(len(m.Payload) + 1) // +1 para ID
+	buf := make([]byte, 4+length)
+
+	binary.BigEndian.PutUint32(buf[0:4], length)
+
+	// a partir de la posicion 4 se obtiene el ID
+	buf[4] = byte(m.ID)
+
+	copy(buf[5:], m.Payload)
+
+	return buf
+}
+
+// parse el mensaje desde el stream.
+func Read(r io.Reader) (*Message, error) {
+	lengthBuf := make([]byte, 4)
+
+	if _, err := io.ReadFull(r, lengthBuf); err != nil {
+		return nil, err
+	}
+
+	length := binary.BigEndian.Uint32(lengthBuf)
+
+	// en caso de llegar vacio mantiene la conexion
+	if length == 0 {
+		return nil, nil
+	}
+
+	messageBuf := make([]byte, length)
+
+	if _, err := io.ReadFull(r, messageBuf); err != nil {
+		return nil, err
+	}
+
+	m := Message{
+		ID:      messageID(messageBuf[0]),
+		Payload: messageBuf[1:],
+	}
+
+	return &m, nil
+}
+
+// obtiene el estado de la conversación peer to peer
+func (m *Message) name() string {
+	if m == nil {
+		return "KeepAlive"
+	}
+
+	switch m.ID {
+	case MsgChoke:
+		return "Choke"
+	case MsgUnchoke:
+		return "Unchoke"
+	case MsgInterested:
+		return "Interested"
+	case MsgNotInterested:
+		return "NotInterested"
+	case MsgHave:
+		return "Have"
+	case MsgBitfield:
+		return "Bitfield"
+	case MsgRequest:
+		return "Request"
+	case MsgPiece:
+		return "Piece"
+	case MsgCancel:
+		return "Cancel"
+	default:
+		return fmt.Sprintf("Unknown#%d", m.ID)
+	}
+}
+
+func (m *Message) String() string {
+	if m == nil {
+		return m.name()
+	}
+
+	return fmt.Sprintf("%s [%d]", m.name(), len(m.Payload))
 }
