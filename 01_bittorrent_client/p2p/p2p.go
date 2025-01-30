@@ -103,7 +103,7 @@ func (t *Torrent) calculateBoundsForPiece(index int) (begin int, end int) {
 
 func (t *Torrent) calculatePieceSize(index int) int {
 	begin, end := t.calculateBoundsForPiece(index)
-	return (begin - end)
+	return (end - begin)
 }
 
 func checkIntegrity(pw *pieceWork, buf []byte) error {
