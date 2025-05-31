@@ -38,7 +38,7 @@ func (g *generator) generateCodeSelect(tokens []Token) *models.ByteCode {
 	/** Se preparan las instrucciones al bytecode */
 	instructions := []models.ByteCodeValue{
 		{
-			Type:       models.ByteCodeOperationTypeINSERT,
+			Type:       models.ByteCodeOperationTypeSELECT,
 			Identifier: stringToStringPtr("SELECT"),
 		},
 	}

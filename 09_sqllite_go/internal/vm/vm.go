@@ -36,6 +36,8 @@ func (vm_ *MiniVM) ExecuteByteCode() models.VMResult {
 	// extraemos el tipo de operacion de acuerdo al tipo
 	typeOperation := vm_.byteCode.Instructions[0].Type
 
+	// fmt.Println(typeOperation)
+
 	if typeOperation == models.ByteCodeOperationTypeINSERT {
 		str, err := vm_.executeInsert(table)
 
