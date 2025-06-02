@@ -11,7 +11,7 @@ similar a SQLlite, escrito en 100% en el lenguaje GO integra:
 En el archivo `arch2.gif` se muestra la arquitectura utilizada en el producto.
 
 ## Que se aprendio
-- Como crear un REPL desde la linea de comandos
+- Como crear un REPL desde un lenguaje de programacion
 - Como funciona un compilador
 - Gestion y control de los caracteres unicode de las instrucciones de entrada
 - Seguir una arquitectura definida
